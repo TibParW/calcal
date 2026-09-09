@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X, Sparkles, Check, Calculator } from "lucide-react";
 import { calculateTdee, UserBodyProfile } from "@/lib/tdee";
 import { UserSettings } from "@/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface TdeeModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
   onClose,
   onApplyGoals,
 }) => {
+  const { lang, t } = useLanguage();
   const [profile, setProfile] = useState<UserBodyProfile>({
     gender: "male",
     age: 26,
@@ -50,12 +52,12 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
           <div className="flex items-center gap-2">
             <Calculator className="w-4 h-4 text-neutral-600 dark:text-neutral-400" />
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">
-              คำนวณเป้าหมายเฉพาะบุคคล (BMR / TDEE)
+              {t("tdee_title")}
             </span>
           </div>
           <button
             onClick={onClose}
-            aria-label="ปิด"
+            aria-label="Close"
             className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-white transition"
           >
             <X className="w-4 h-4" />
@@ -67,7 +69,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
           {/* Gender */}
           <div>
             <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-              เพศ
+              {t("tdee_gender")}
             </label>
             <div className="grid grid-cols-2 gap-1.5 p-1 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl">
               <button
@@ -79,7 +81,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
                     : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
                 }`}
               >
-                ชาย
+                {t("tdee_male")}
               </button>
               <button
                 type="button"
@@ -90,7 +92,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
                     : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
                 }`}
               >
-                หญิง
+                {t("tdee_female")}
               </button>
             </div>
           </div>
@@ -99,7 +101,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
           <div className="grid grid-cols-3 gap-2">
             <div>
               <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-                อายุ (ปี)
+                {t("tdee_age")}
               </label>
               <input
                 type="number"
@@ -114,7 +116,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
             </div>
             <div>
               <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-                น้ำหนัก (kg)
+                {t("tdee_weight")}
               </label>
               <input
                 type="number"
@@ -130,7 +132,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
             </div>
             <div>
               <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-                ส่วนสูง (cm)
+                {t("tdee_height")}
               </label>
               <input
                 type="number"
@@ -148,7 +150,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
           {/* Activity Level */}
           <div>
             <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-              กิจวัตรประจำวัน
+              {t("tdee_activity")}
             </label>
             <select
               value={profile.activityLevel}
@@ -160,17 +162,17 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
               }
               className="w-full px-3 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 font-medium text-neutral-900 dark:text-white text-xs focus:outline-none"
             >
-              <option value="sedentary">นั่งทำงานโต๊ะ แทบไม่ได้ออกกำลังกาย</option>
-              <option value="light">ออกกำลังกายเบาๆ 1-3 วัน/สัปดาห์</option>
-              <option value="moderate">ออกกำลังกายปานกลาง 3-5 วัน/สัปดาห์</option>
-              <option value="heavy">ออกกำลังกายหนัก 6-7 วัน/สัปดาห์</option>
+              <option value="sedentary">{t("tdee_act_sedentary")}</option>
+              <option value="light">{t("tdee_act_light")}</option>
+              <option value="moderate">{t("tdee_act_moderate")}</option>
+              <option value="heavy">{t("tdee_act_active")}</option>
             </select>
           </div>
 
           {/* Goal Selection */}
           <div>
             <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-              เป้าหมายของคุณ
+              {t("tdee_goal")}
             </label>
             <div className="grid grid-cols-3 gap-1.5 p-1 bg-neutral-100 dark:bg-neutral-800/60 rounded-xl">
               <button
@@ -182,7 +184,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
                     : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
                 }`}
               >
-                ลดไขมัน (-500)
+                {t("tdee_goal_loss")}
               </button>
               <button
                 type="button"
@@ -193,7 +195,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
                     : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
                 }`}
               >
-                รักษาน้ำหนัก
+                {t("tdee_goal_maintain")}
               </button>
               <button
                 type="button"
@@ -204,7 +206,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
                     : "text-neutral-500 hover:text-neutral-900 dark:hover:text-white"
                 }`}
               >
-                เพิ่มกล้าม (+300)
+                {t("tdee_goal_gain")}
               </button>
             </div>
           </div>
@@ -213,40 +215,40 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
           <div className="p-4 rounded-2xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/60 dark:border-neutral-700/60 space-y-3">
             <div className="flex items-center justify-between text-xs">
               <span className="text-neutral-500 dark:text-neutral-400">
-                BMR (เผาผลาญพื้นฐาน):
+                {t("tdee_bmr_label")}:
               </span>
               <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                {result.bmr.toLocaleString()} kcal
+                {result.bmr.toLocaleString()} {t("ring_kcal")}
               </span>
             </div>
 
             <div className="flex items-center justify-between text-xs">
               <span className="text-neutral-500 dark:text-neutral-400">
-                TDEE (ใช้พลังงานรวมทั้งวัน):
+                {t("tdee_tdee_label")}:
               </span>
               <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-                {result.tdee.toLocaleString()} kcal
+                {result.tdee.toLocaleString()} {t("ring_kcal")}
               </span>
             </div>
 
             <div className="pt-2 border-t border-neutral-200/70 dark:border-neutral-700/70 flex items-center justify-between">
               <div>
                 <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 uppercase tracking-wider block">
-                  เป้าหมายแนะนำต่อวัน
+                  {t("tdee_target_label")}
                 </span>
                 <span className="text-2xl font-black text-neutral-900 dark:text-white">
                   {result.targetCalories.toLocaleString()}
-                  <span className="text-xs font-normal text-neutral-400 ml-1">kcal</span>
+                  <span className="text-xs font-normal text-neutral-400 ml-1">{t("ring_kcal")}</span>
                 </span>
               </div>
 
               {/* Recommended Macros */}
               <div className="text-right text-[11px] text-neutral-500 dark:text-neutral-400">
                 <span className="block font-medium">
-                  P: <strong className="text-neutral-800 dark:text-neutral-200">{result.targetProteinG}g</strong>
+                  P: <strong className="text-neutral-800 dark:text-neutral-200">{result.targetProteinG}{t("macro_g")}</strong>
                 </span>
                 <span className="block font-medium">
-                  C: <strong className="text-neutral-800 dark:text-neutral-200">{result.targetCarbsG}g</strong> · F: <strong className="text-neutral-800 dark:text-neutral-200">{result.targetFatG}g</strong>
+                  C: <strong className="text-neutral-800 dark:text-neutral-200">{result.targetCarbsG}{t("macro_g")}</strong> · F: <strong className="text-neutral-800 dark:text-neutral-200">{result.targetFatG}{t("macro_g")}</strong>
                 </span>
               </div>
             </div>
@@ -261,7 +263,7 @@ export const TdeeModal: React.FC<TdeeModalProps> = ({
             className="w-full py-3 bg-neutral-900 hover:bg-black text-white dark:bg-white dark:text-neutral-900 rounded-2xl text-xs font-semibold tracking-tight transition active:scale-95 flex items-center justify-center gap-1.5 shadow-sm"
           >
             <Check className="w-4 h-4" />
-            <span>ใช้เป้าหมาย {result.targetCalories} kcal/วันนี้ทันที</span>
+            <span>{t("tdee_apply_btn")} ({result.targetCalories} {t("ring_kcal")})</span>
           </button>
         </div>
       </div>

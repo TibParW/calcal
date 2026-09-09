@@ -1,4 +1,5 @@
 import React from "react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface CalorieRingProps {
   consumed: number;
@@ -6,6 +7,7 @@ interface CalorieRingProps {
 }
 
 export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal }) => {
+  const { t } = useLanguage();
   const safeGoal = Math.max(1, goal);
   const percentage = Math.min(Math.round((consumed / safeGoal) * 100), 100);
   const remaining = safeGoal - consumed;
@@ -62,7 +64,7 @@ export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal }) => {
         {/* Center Minimal Typography */}
         <div className="absolute inset-0 flex flex-col items-center justify-center text-center select-none">
           <span className="text-[11px] font-medium tracking-wider uppercase text-neutral-400 dark:text-neutral-500 mb-0.5">
-            พลังงานที่กิน
+            {t("ring_consumed")}
           </span>
 
           <div className="flex items-baseline justify-center gap-1 my-0.5">
@@ -72,7 +74,7 @@ export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal }) => {
           </div>
 
           <span className="text-xs text-neutral-400 dark:text-neutral-500">
-            / {goal.toLocaleString()} kcal
+            / {goal.toLocaleString()} {t("ring_kcal")}
           </span>
         </div>
       </div>
@@ -81,11 +83,15 @@ export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal }) => {
       <div className="mt-3 text-center">
         {isOver ? (
           <span className="text-xs font-medium text-rose-500">
-            เกินเป้าหมาย {Math.abs(remaining).toLocaleString()} kcal
+            {t("ring_over")} {Math.abs(remaining).toLocaleString()} {t("ring_kcal")}
           </span>
         ) : (
           <span className="text-xs font-medium text-neutral-500 dark:text-neutral-400">
-            เหลืออีก <span className="font-semibold text-neutral-800 dark:text-neutral-200">{remaining.toLocaleString()} kcal</span> ({percentage}%)
+            {t("ring_remaining")}{" "}
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+              {remaining.toLocaleString()} {t("ring_kcal")}
+            </span>{" "}
+            ({percentage}%)
           </span>
         )}
       </div>

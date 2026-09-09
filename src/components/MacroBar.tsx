@@ -1,5 +1,6 @@
 import React from "react";
 import { UserSettings } from "@/types";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface MacroBarProps {
   protein: number;
@@ -14,6 +15,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
   fat,
   settings,
 }) => {
+  const { t } = useLanguage();
   const pGoal = settings.protein_goal_g || 100;
   const cGoal = settings.carbs_goal_g || 250;
   const fGoal = settings.fat_goal_g || 65;
@@ -29,10 +31,10 @@ export const MacroBar: React.FC<MacroBarProps> = ({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="font-medium text-neutral-500 dark:text-neutral-400 text-[11px]">
-              โปรตีน
+              {t("macro_protein")}
             </span>
             <span className="font-semibold text-neutral-800 dark:text-neutral-200 text-xs">
-              {protein}g
+              {protein}{t("macro_g")}
             </span>
           </div>
           <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -42,7 +44,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
             />
           </div>
           <span className="text-[10px] text-neutral-400">
-            เป้า {pGoal}g
+            {t("ring_goal")} {pGoal}{t("macro_g")}
           </span>
         </div>
 
@@ -50,10 +52,10 @@ export const MacroBar: React.FC<MacroBarProps> = ({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="font-medium text-neutral-500 dark:text-neutral-400 text-[11px]">
-              คาร์บ
+              {t("macro_carbs")}
             </span>
             <span className="font-semibold text-neutral-800 dark:text-neutral-200 text-xs">
-              {carbs}g
+              {carbs}{t("macro_g")}
             </span>
           </div>
           <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -63,7 +65,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
             />
           </div>
           <span className="text-[10px] text-neutral-400">
-            เป้า {cGoal}g
+            {t("ring_goal")} {cGoal}{t("macro_g")}
           </span>
         </div>
 
@@ -71,10 +73,10 @@ export const MacroBar: React.FC<MacroBarProps> = ({
         <div className="flex flex-col gap-1.5">
           <div className="flex items-baseline justify-between text-xs">
             <span className="font-medium text-neutral-500 dark:text-neutral-400 text-[11px]">
-              ไขมัน
+              {t("macro_fat")}
             </span>
             <span className="font-semibold text-neutral-800 dark:text-neutral-200 text-xs">
-              {fat}g
+              {fat}{t("macro_g")}
             </span>
           </div>
           <div className="w-full h-1 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
@@ -84,7 +86,7 @@ export const MacroBar: React.FC<MacroBarProps> = ({
             />
           </div>
           <span className="text-[10px] text-neutral-400">
-            เป้า {fGoal}g
+            {t("ring_goal")} {fGoal}{t("macro_g")}
           </span>
         </div>
       </div>

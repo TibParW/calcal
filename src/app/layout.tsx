@@ -28,15 +28,17 @@ export const viewport: Viewport = {
   ],
 };
 
+import { Providers } from "@/components/Providers";
+
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="th">
+    <html lang="th" suppressHydrationWarning>
       <body className="antialiased min-h-screen bg-[#fafaf9] dark:bg-[#0c0c0e] text-neutral-900 dark:text-neutral-100 flex flex-col selection:bg-neutral-900 selection:text-white dark:selection:bg-neutral-100 dark:selection:text-neutral-900">
-        {children}
+        <Providers>{children}</Providers>
       </body>
     </html>
   );

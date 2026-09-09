@@ -1,5 +1,6 @@
 import React from "react";
 import { Settings, History } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -7,6 +8,8 @@ interface NavbarProps {
 }
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory }) => {
+  const { lang, setLang, t } = useLanguage();
+
   return (
     <header className="sticky top-0 z-30 bg-[#fafaf9]/85 dark:bg-[#0c0c0e]/85 backdrop-blur-md border-b border-neutral-200/50 dark:border-neutral-800/60 transition-colors">
       <div className="max-w-md mx-auto px-5 h-14 flex items-center justify-between">
@@ -18,12 +21,40 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
         </div>
 
-        {/* Minimal Action Icons */}
-        <div className="flex items-center gap-1">
+        {/* Minimal Action Icons & Language Selector */}
+        <div className="flex items-center gap-2">
+          {/* Direct Press Language Selector (No slider) */}
+          <div className="flex items-center text-[11px] font-medium rounded-md border border-neutral-200 dark:border-neutral-800 p-0.5 bg-neutral-100/80 dark:bg-neutral-900/80">
+            <button
+              type="button"
+              onClick={() => setLang("th")}
+              className={`px-1.5 py-0.5 rounded transition active:scale-95 ${
+                lang === "th"
+                  ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs font-semibold"
+                  : "text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+              }`}
+              title="ภาษาไทย"
+            >
+              TH
+            </button>
+            <button
+              type="button"
+              onClick={() => setLang("en")}
+              className={`px-1.5 py-0.5 rounded transition active:scale-95 ${
+                lang === "en"
+                  ? "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-neutral-100 shadow-xs font-semibold"
+                  : "text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200"
+              }`}
+              title="English"
+            >
+              EN
+            </button>
+          </div>
+
           <button
             onClick={onOpenHistory}
-            aria-label="ประวัติการบันทึก"
-            title="ประวัติการบันทึก"
+            aria-label={t("nav_history")}
+            title={t("nav_history")}
             className="p-2 rounded-full text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60 transition active:scale-95"
           >
             <History className="w-[18px] h-[18px] stroke-[1.8]" />
@@ -31,8 +62,8 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
 
           <button
             onClick={onOpenSettings}
-            aria-label="ตั้งค่า"
-            title="ตั้งค่า"
+            aria-label={t("nav_settings")}
+            title={t("nav_settings")}
             className="p-2 rounded-full text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60 transition active:scale-95"
           >
             <Settings className="w-[18px] h-[18px] stroke-[1.8]" />

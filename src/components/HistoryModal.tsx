@@ -12,11 +12,12 @@ import {
   stripOldThumbnails,
   exportLogsAsCsv,
   exportDataAsJson,
-  formatThaiDate,
   getLocalDateString,
   getPast7DaysSummary,
   WeeklyOverviewData,
 } from "@/lib/storage";
+import { formatLocalizedDate } from "@/lib/i18n";
+import { useLanguage } from "@/context/LanguageContext";
 import { FoodLogItem, StorageUsageInfo, UserSettings } from "@/types";
 import { WeeklyChart } from "@/components/WeeklyChart";
 
@@ -33,6 +34,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   onSelectDate,
   settings,
 }) => {
+  const { lang, t } = useLanguage();
   const [storageInfo, setStorageInfo] = useState<StorageUsageInfo>({
     totalBytes: 0,
     totalKb: 0,
@@ -100,7 +102,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   };
 
   const handleStripThumbnails = () => {
-    if (window.confirm("ต้องการลบเฉพาะไฟล์รูปภาพเพื่อประหยัดพื้นที่ใช่หรือไม่? (ประวัติและตัวเลขยังคงอยู่ครบ 100%)")) {
+    if (window.confirm(t("settings_strip_confirm"))) {
       stripOldThumbnails(0);
       loadData();
     }
@@ -113,15 +115,17 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
         <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
           <div>
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 block">
-              ประวัติการบันทึก
+              {t("hist_title")}
             </span>
             <span className="text-[11px] text-neutral-400">
-              ขนาดในเครื่อง {storageInfo.totalKb} KB ({storageInfo.totalMeals} มื้อ)
+              {lang === "en"
+                ? `Storage ${storageInfo.totalKb} KB (${storageInfo.totalMeals} meals)`
+                : `ขนาดในเครื่อง ${storageInfo.totalKb} KB (${storageInfo.totalMeals} มื้อ)`}
             </span>
           </div>
           <button
             onClick={onClose}
-            aria-label="ปิด"
+            aria-label="Close"
             className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-white transition"
           >
             <X className="w-4 h-4" />
@@ -136,7 +140,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#1c1c20] border border-neutral-200/60 dark:border-neutral-700/60 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 transition"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-neutral-500" />
-              <span>ส่งออก CSV</span>
+              <span>CSV</span>
             </button>
 
             <button
@@ -144,7 +148,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-white dark:bg-[#1c1c20] border border-neutral-200/60 dark:border-neutral-700/60 text-xs font-medium text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 transition"
             >
               <Download className="w-3.5 h-3.5 text-neutral-500" />
-              <span>สำรอง JSON</span>
+              <span>JSON</span>
             </button>
           </div>
 
@@ -154,7 +158,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
               className="text-[11px] text-neutral-400 hover:text-rose-500 flex items-center gap-1 transition"
             >
               <Trash2 className="w-3 h-3" />
-              <span>ลบรูปเก่า</span>
+              <span>{lang === "en" ? "Clear Images" : "ลบรูปเก่า"}</span>
             </button>
           )}
         </div>
@@ -172,13 +176,13 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
           <div className="pt-2">
             <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block mb-2">
-              ประวัติรายวัน
+              {t("hist_logs_title")}
             </span>
           </div>
 
           {sortedDates.length === 0 ? (
             <div className="py-12 text-center text-xs text-neutral-400">
-              ยังไม่มีประวัติการบันทึก
+              {t("hist_empty")}
             </div>
           ) : (
             sortedDates.map((dateStr) => {
@@ -199,7 +203,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                   <div>
                     <div className="flex items-baseline gap-1.5">
                       <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">
-                        {formatThaiDate(dateStr)}
+                        {formatLocalizedDate(dateStr, lang)}
                       </span>
                       <span className="text-[11px] text-neutral-400">
                         ({dateStr})
@@ -207,7 +211,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                     </div>
 
                     <p className="text-xs text-neutral-400 mt-0.5 truncate max-w-[200px]">
-                      {dayItems.length} มื้อ: {dayItems.map((it) => it.food_name).join(", ")}
+                      {dayItems.length} {t("hist_meals")}: {dayItems.map((it) => (lang === "en" ? (it.food_name_en || it.food_name) : (it.food_name || it.food_name_en))).join(", ")}
                     </p>
                   </div>
 
@@ -218,7 +222,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                           isOver ? "text-rose-500" : "text-neutral-900 dark:text-neutral-100"
                         }`}
                       >
-                        {dayTotalCal.toLocaleString()} <span className="text-[10px] font-normal text-neutral-400">kcal</span>
+                        {dayTotalCal.toLocaleString()} <span className="text-[10px] font-normal text-neutral-400">{t("ring_kcal")}</span>
                       </span>
                       <span className="text-[10px] text-neutral-400">
                         {Math.round((dayTotalCal / goal) * 100)}%

@@ -31,8 +31,10 @@ import { ManualEntryModal } from "@/components/ManualEntryModal";
 import { SettingsModal } from "@/components/SettingsModal";
 import { HistoryModal } from "@/components/HistoryModal";
 import { TdeeModal } from "@/components/TdeeModal";
+import { useLanguage } from "@/context/LanguageContext";
 
 export default function HomePage() {
+  const { lang, t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const [logs, setLogs] = useState<FoodLogItem[]>([]);
   const [settings, setSettings] = useState<UserSettings>({
@@ -136,13 +138,13 @@ export default function HomePage() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.error || "เกิดข้อผิดพลาดในการวิเคราะห์อาหาร");
+        throw new Error(data.error || (lang === "en" ? "Error analyzing food image" : "เกิดข้อผิดพลาดในการวิเคราะห์อาหาร"));
       }
 
       setAnalysisResponse(data);
     } catch (err: any) {
       console.error("Analysis failed:", err);
-      setAnalysisError(err.message || "ไม่สามารถติดต่อระบบ AI ได้ กรุณาลองใหม่อีกครั้ง");
+      setAnalysisError(err.message || (lang === "en" ? "Cannot connect to AI service. Please try again." : "ไม่สามารถติดต่อระบบ AI ได้ กรุณาลองใหม่อีกครั้ง"));
     } finally {
       setIsAnalyzing(false);
     }
@@ -209,7 +211,7 @@ export default function HomePage() {
       calories: entry.calories,
       macronutrients: entry.macronutrients,
       portion_multiplier: 1.0,
-      portion_label: "บันทึกเอง",
+      portion_label: lang === "en" ? "Manual" : "บันทึกเอง",
     });
 
     refreshData();
@@ -273,7 +275,7 @@ export default function HomePage() {
 
       {/* Minimal Footer */}
       <footer className="w-full max-w-sm sm:max-w-md mx-auto px-4 py-6 text-center text-[11px] text-neutral-400">
-        <p>calCal • จำในเครื่อง ตัดรอบ 00:00 น.</p>
+        <p>{t("tagline")}</p>
       </footer>
 
       {/* AI Analysis Modal */}

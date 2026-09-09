@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { X } from "lucide-react";
 import { Macronutrients } from "@/types";
 import { getLocalTimeString } from "@/lib/storage";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface ManualEntryModalProps {
   isOpen: boolean;
@@ -19,6 +20,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
   onClose,
   onSave,
 }) => {
+  const { t } = useLanguage();
   const [foodName, setFoodName] = useState("");
   const [calories, setCalories] = useState<number | "">("");
   const [protein, setProtein] = useState<number | "">("");
@@ -57,11 +59,11 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
         {/* Header */}
         <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
           <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">
-            พิมพ์บันทึกอาหาร
+            {t("manual_title")}
           </span>
           <button
             onClick={onClose}
-            aria-label="ปิด"
+            aria-label="Close"
             className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-white transition"
           >
             <X className="w-4 h-4" />
@@ -72,14 +74,14 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div>
             <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-              ชื่ออาหาร / เครื่องดื่ม
+              {t("manual_name")}
             </label>
             <input
               type="text"
               required
               value={foodName}
               onChange={(e) => setFoodName(e.target.value)}
-              placeholder="เช่น กาแฟอเมริกาโน่, ข้าวต้มปลา"
+              placeholder={t("manual_name_placeholder")}
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-900 dark:text-white text-sm focus:outline-none focus:border-neutral-400"
             />
           </div>
@@ -87,7 +89,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-                พลังงาน (kcal)
+                {t("manual_calories")}
               </label>
               <input
                 type="number"
@@ -95,14 +97,14 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
                 min="0"
                 value={calories}
                 onChange={(e) => setCalories(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="เช่น 300"
+                placeholder="300"
                 className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-900 dark:text-white text-sm focus:outline-none focus:border-neutral-400"
               />
             </div>
 
             <div>
               <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
-                เวลา
+                {t("manual_time")}
               </label>
               <input
                 type="time"
@@ -115,7 +117,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
 
           <div>
             <span className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1.5">
-              สารอาหาร (ไม่บังคับ)
+              {t("manual_macros_title")}
             </span>
             <div className="grid grid-cols-3 gap-2">
               <input
@@ -123,7 +125,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
                 min="0"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="โปรตีน g"
+                placeholder={`${t("macro_protein")} (${t("macro_g")})`}
                 className="w-full px-2 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-xs text-center focus:outline-none focus:border-neutral-400"
               />
               <input
@@ -131,7 +133,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
                 min="0"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="คาร์บ g"
+                placeholder={`${t("macro_carbs")} (${t("macro_g")})`}
                 className="w-full px-2 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-xs text-center focus:outline-none focus:border-neutral-400"
               />
               <input
@@ -139,7 +141,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
                 min="0"
                 value={fat}
                 onChange={(e) => setFat(e.target.value === "" ? "" : Number(e.target.value))}
-                placeholder="ไขมัน g"
+                placeholder={`${t("macro_fat")} (${t("macro_g")})`}
                 className="w-full px-2 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-xs text-center focus:outline-none focus:border-neutral-400"
               />
             </div>
@@ -151,7 +153,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
               disabled={!foodName.trim() || calories === ""}
               className="w-full py-3 bg-neutral-900 hover:bg-black text-white dark:bg-white dark:text-neutral-900 rounded-2xl text-xs font-semibold tracking-tight transition active:scale-95 disabled:opacity-40"
             >
-              บันทึกรายการ
+              {t("manual_save")}
             </button>
           </div>
         </form>

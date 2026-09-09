@@ -1,5 +1,6 @@
 import React from "react";
 import { WeeklyOverviewData } from "@/lib/storage";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface WeeklyChartProps {
   data: WeeklyOverviewData;
@@ -10,9 +11,12 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({
   data,
   onSelectDate,
 }) => {
+  const { lang, t } = useLanguage();
   const { days, weeklyAverage, daysWithinGoal, activeDaysCount } = data;
 
-  // Find max value to scale chart appropriately (minimum 2500)
+  const enDayNames = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+
+  // Find max value to scale chart appropriately (minimum 2400)
   const maxCalories = Math.max(
     2400,
     ...days.map((d) => Math.max(d.totalCalories, d.goal))
@@ -24,19 +28,19 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({
       <div className="flex items-center justify-between">
         <div>
           <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
-            สรุป 7 วันล่าสุด
+            {t("hist_chart_title")}
           </span>
           <span className="text-base font-bold text-neutral-900 dark:text-neutral-100">
-            เฉลี่ย {weeklyAverage.toLocaleString()} <span className="text-xs font-normal text-neutral-400">kcal/วัน</span>
+            {t("hist_avg_label")} {weeklyAverage.toLocaleString()} <span className="text-xs font-normal text-neutral-400">{t("ring_kcal")}/{t("hist_days_unit")}</span>
           </span>
         </div>
 
         <div className="text-right">
           <span className="text-[11px] text-neutral-400 block">
-            คุมตามเป้า
+            {t("hist_days_met")}
           </span>
           <span className="text-xs font-semibold text-emerald-600 dark:text-emerald-400">
-            {daysWithinGoal} จาก {activeDaysCount} วันที่บันทึก
+            {lang === "en" ? `${daysWithinGoal} of ${activeDaysCount} ${t("hist_days_unit")}` : `${daysWithinGoal} จาก ${activeDaysCount} วันที่บันทึก`}
           </span>
         </div>
       </div>
@@ -57,6 +61,10 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({
               ? "bg-rose-400 dark:bg-rose-500"
               : "bg-emerald-500 dark:bg-emerald-400";
           }
+
+          const [y, m, d] = day.date.split("-").map(Number);
+          const dateObj = new Date(y, m - 1, d);
+          const localizedDayLabel = lang === "en" ? enDayNames[dateObj.getDay()] : day.dayLabel;
 
           return (
             <div
@@ -86,7 +94,7 @@ export const WeeklyChart: React.FC<WeeklyChartProps> = ({
                       : "text-neutral-400"
                   }`}
                 >
-                  {day.dayLabel}
+                  {localizedDayLabel}
                 </span>
                 <span className="text-[8px] text-neutral-300 dark:text-neutral-600 block mt-0.5 leading-none">
                   {day.formattedDate}

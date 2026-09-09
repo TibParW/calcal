@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import { FoodLogItem } from "@/types";
 import { Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import { useLanguage } from "@/context/LanguageContext";
 
 interface FoodListProps {
   items: FoodLogItem[];
@@ -12,6 +13,7 @@ export const FoodList: React.FC<FoodListProps> = ({
   items,
   onDeleteItem,
 }) => {
+  const { lang, t } = useLanguage();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [itemToDelete, setItemToDelete] = useState<string | null>(null);
 
@@ -23,10 +25,10 @@ export const FoodList: React.FC<FoodListProps> = ({
     return (
       <div className="py-12 text-center flex flex-col items-center justify-center">
         <p className="text-sm font-medium text-neutral-400 dark:text-neutral-500">
-          ยังไม่มีรายการอาหาร
+          {t("list_empty_title")}
         </p>
         <span className="text-xs text-neutral-400/80 mt-0.5">
-          แตะถ่ายรูปด้านบนเพื่อเริ่มบันทึก
+          {t("list_empty_sub")}
         </span>
       </div>
     );
@@ -36,10 +38,10 @@ export const FoodList: React.FC<FoodListProps> = ({
     <div className="flex flex-col gap-2">
       <div className="flex items-center justify-between px-1 mb-1">
         <span className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-wider uppercase">
-          มื้ออาหาร ({items.length})
+          {lang === "th" ? `มื้ออาหาร (${items.length})` : `Meals (${items.length})`}
         </span>
         <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium">
-          รวม {items.reduce((sum, item) => sum + item.calories, 0).toLocaleString()} kcal
+          {t("hist_total")} {items.reduce((sum, item) => sum + item.calories, 0).toLocaleString()} {t("ring_kcal")}
         </span>
       </div>
 
@@ -47,6 +49,10 @@ export const FoodList: React.FC<FoodListProps> = ({
         {items.map((item) => {
           const isExpanded = expandedId === item.id;
           const isConfirmingDelete = itemToDelete === item.id;
+          const displayName =
+            lang === "en"
+              ? item.food_name_en || item.food_name
+              : item.food_name || item.food_name_en;
 
           return (
             <div
@@ -59,7 +65,7 @@ export const FoodList: React.FC<FoodListProps> = ({
                   <div className="w-11 h-11 rounded-xl overflow-hidden bg-neutral-100 dark:bg-neutral-800 flex-shrink-0">
                     <img
                       src={item.thumbnail}
-                      alt={item.food_name}
+                      alt={displayName}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
@@ -70,12 +76,12 @@ export const FoodList: React.FC<FoodListProps> = ({
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline justify-between gap-2">
                     <h4 className="font-semibold text-sm text-neutral-900 dark:text-neutral-100 truncate">
-                      {item.food_name}
+                      {displayName}
                     </h4>
 
                     {/* Calories */}
                     <span className="font-bold text-sm text-neutral-900 dark:text-neutral-100 whitespace-nowrap">
-                      {item.calories} <span className="text-[11px] font-normal text-neutral-400">kcal</span>
+                      {item.calories} <span className="text-[11px] font-normal text-neutral-400">{t("ring_kcal")}</span>
                     </span>
                   </div>
 
@@ -119,19 +125,19 @@ export const FoodList: React.FC<FoodListProps> = ({
                         }}
                         className="px-2 py-0.5 text-[11px] font-medium bg-rose-500 text-white rounded-lg transition"
                       >
-                        ลบ
+                        {lang === "th" ? "ลบ" : "Delete"}
                       </button>
                       <button
                         onClick={() => setItemToDelete(null)}
                         className="px-2 py-0.5 text-[11px] font-medium text-neutral-500 rounded-lg hover:bg-neutral-100 dark:hover:bg-neutral-800 transition"
                       >
-                        ยกเลิก
+                        {t("manual_cancel")}
                       </button>
                     </div>
                   ) : (
                     <button
                       onClick={() => setItemToDelete(item.id)}
-                      aria-label="ลบรายการ"
+                      aria-label="Delete item"
                       className="p-1.5 text-neutral-300 hover:text-rose-500 dark:text-neutral-600 dark:hover:text-rose-400 rounded-lg transition"
                     >
                       <Trash2 className="w-3.5 h-3.5" />

@@ -58,6 +58,7 @@ export interface UserSettings {
   gemini_api_key?: string; // Optional user-provided key for local/custom deployment
   storage_mode?: 'ultra_light' | 'micro_thumbnail'; // ultra_light = no image stored (~200B/meal), micro_thumbnail = 80px tiny image (~3KB)
   auto_prune_days?: number; // Prune images older than N days (default 30)
+  language?: 'th' | 'en'; // App language preference
 }
 
 export interface StorageUsageInfo {
