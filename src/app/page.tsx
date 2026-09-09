@@ -116,8 +116,8 @@ export default function HomePage() {
     setIsAnalysisModalOpen(true);
 
     try {
-      // 1. Compress image for fast upload and AI processing (800px is optimal for speed & vision accuracy)
-      const { base64, mimeType } = await compressImageForAnalysis(file, 800, 0.72);
+      // 1. High-clarity compression (1024px @ 0.82) for precise Thai street food & ingredient identification
+      const { base64, mimeType } = await compressImageForAnalysis(file, 1024, 0.82);
       setImagePreview(base64);
 
       // 2. Create ultra-lightweight thumbnail (~2-3KB) for LocalStorage
