@@ -27,12 +27,13 @@ export async function POST(request: NextRequest) {
   }
 
   // Multi-model candidate list for live probe:
-  // Dynamically supports new Gemini 3.x keys as well as legacy keys
+  // Prioritizes ultra-fast lite models (<1s response) to avoid 503 high demand
   const probeModels = [
+    "gemini-3.5-flash-lite",
+    "gemini-flash-lite-latest",
     "gemini-3.5-flash",
     "gemini-3.7-flash",
-    "gemini-3.6-flash",
-    "gemini-3.8-flash",
+    "gemini-3.1-flash-lite",
     "gemini-1.5-flash",
     "gemini-2.0-flash",
     "gemini-flash-latest",
