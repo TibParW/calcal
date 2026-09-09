@@ -15,6 +15,11 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
       <div className="max-w-md mx-auto px-5 h-14 flex items-center justify-between">
         {/* Brand */}
         <div className="flex items-center gap-2">
+          <img
+            src="/icon.png"
+            alt="calCal"
+            className="w-5 h-5 object-contain select-none"
+          />
           <span className="font-semibold text-lg tracking-tight text-neutral-900 dark:text-neutral-100">
             calCal
           </span>

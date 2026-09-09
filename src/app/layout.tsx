@@ -11,8 +11,11 @@ export const metadata: Metadata = {
     title: "calCal",
   },
   icons: {
-    icon: "/icon.svg",
-    apple: "/icon.svg",
+    icon: [
+      { url: "/favicon.png", sizes: "32x32", type: "image/png" },
+      { url: "/icon.png", sizes: "128x128", type: "image/png" },
+    ],
+    apple: "/icon-192.png",
   },
 };
 
