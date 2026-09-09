@@ -528,6 +528,59 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
   },
 };
 
+// Smart offline quantity parser: extracts numbers like "กล้วย 4", "กล้วย 2 ลูก", "ไข่ต้ม 3 ฟอง"
+function tryOfflineNutritionWithQuantity(rawQuery: string): TextNutritionEstimate | null {
+  const clean = rawQuery.trim().toLowerCase();
+
+  // 1. Direct match
+  for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
+    const cleanKey = key.toLowerCase();
+    if (clean === cleanKey || clean === cleanKey.replace(/\s+/g, "")) {
+      return val;
+    }
+  }
+
+  // 2. Extract quantity (e.g. "กล้วย 4", "กล้วย 4 ลูก", "4 กล้วย", "ไข่ต้ม 3 ฟอง")
+  const numMatch = clean.match(/\d+(?:\.\d+)?/);
+  if (numMatch) {
+    const qty = parseFloat(numMatch[0]);
+    if (qty > 0 && qty <= 100) {
+      // Remove numbers and common Thai unit words to find the base food
+      const baseWord = clean
+        .replace(/\d+(?:\.\d+)?/g, "")
+        .replace(/(ลูก|ผล|ฟอง|ชิ้น|จาน|ทัพพี|แก้ว|ไม้|ถ้วย|ก้อน|ซอง|อัน)/g, "")
+        .trim();
+
+      if (baseWord.length >= 2) {
+        for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
+          const cleanKey = key.toLowerCase();
+          if (
+            baseWord === cleanKey ||
+            cleanKey.includes(baseWord) ||
+            baseWord.includes(cleanKey)
+          ) {
+            // Determine unit label
+            const unit = val.portion_description.match(/(ลูก|ผล|ฟอง|ชิ้น|จาน|ทัพพี|แก้ว|ไม้|ถ้วย|ก้อน|ซอง|อัน)/)?.[0] || "ชิ้น";
+            return {
+              food_name: `${val.food_name} ${qty} ${unit}`,
+              food_name_en: val.food_name_en ? `${qty} ${val.food_name_en}` : "",
+              calories: Math.round(val.calories * qty),
+              macronutrients: {
+                protein_g: Number((val.macronutrients.protein_g * qty).toFixed(1)),
+                carbs_g: Number((val.macronutrients.carbs_g * qty).toFixed(1)),
+                fat_g: Number((val.macronutrients.fat_g * qty).toFixed(1)),
+              },
+              portion_description: `${qty} ${unit}`,
+            };
+          }
+        }
+      }
+    }
+  }
+
+  return null;
+}
+
 /**
  * Estimates calories and macronutrients from food name text using Gemini AI (with offline fallback).
  */
@@ -540,18 +593,17 @@ export async function estimateNutritionFromText(
     throw new Error("กรุณาระบุชื่ออาหาร");
   }
 
-  // Check direct offline match first for ultra-fast response
-  const lowerQuery = query.toLowerCase();
-  for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
-    if (lowerQuery === key.toLowerCase() || lowerQuery === key.toLowerCase().replace(/\s+/g, "")) {
-      return val;
-    }
+  // 1. Instant offline check with smart quantity detection (0.001s, 0 network, 0 quota)
+  const offlineMatch = tryOfflineNutritionWithQuantity(query);
+  if (offlineMatch) {
+    return offlineMatch;
   }
 
   const apiKey = (userApiKey || process.env.GEMINI_API_KEY || "").trim();
 
   // If no API key is available, check fuzzy match in offline dictionary
   if (!apiKey) {
+    const lowerQuery = query.toLowerCase();
     for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
       if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
         return val;
@@ -562,8 +614,12 @@ export async function estimateNutritionFromText(
     );
   }
 
-  const candidateModels = await getAvailableGeminiModels(apiKey);
-  const genAI = new GoogleGenerativeAI(apiKey);
+  // Priority fast models for text estimation
+  const fastModels = [
+    "gemini-2.5-flash-lite",
+    "gemini-3.6-flash",
+    "gemini-flash-latest",
+  ];
 
   const prompt = `คุณคือผู้เชี่ยวชาญด้านโภชนาการอาหาร หน้าที่ของคุณคือประมาณค่าพลังงานรวม (kcal) และสารอาหารหลัก (โปรตีน, คาร์บ, ไขมัน ในหน่วยกรัม) ของอาหารที่ระบุต่อไปนี้:
 "${query}"
@@ -575,7 +631,7 @@ export async function estimateNutritionFromText(
   "is_food": false,
   "error_message": "ไม่พบว่าเป็นชื่ออาหาร กรุณาระบุชื่อเมนูอาหารใหม่อีกครั้ง"
 }
-3. หากเป็นอาหารหรือเครื่องดื่ม ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving)
+3. หากเป็นอาหารหรือเครื่องดื่ม ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving) หรือตามจำนวนที่ระบุ
 4. ปัดตัวเลขแคลอรีและสารอาหารเป็นจำนวนเต็มหรือทศนิยม 1 ตำแหน่ง
 5. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
 {
@@ -593,20 +649,36 @@ export async function estimateNutritionFromText(
 
   let lastError: any = null;
 
-  for (const modelName of candidateModels) {
+  // Try fast direct fetch with a strict 3.5s timeout per model (prevents long hangs)
+  for (const modelName of fastModels) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
     try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          temperature: 0.2,
-          maxOutputTokens: 1024,
-          responseMimeType: "application/json",
-        },
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url, {
+        method: "POST",
+        signal: controller.signal,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          contents: [{ parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.2,
+            maxOutputTokens: 1024,
+          },
+        }),
       });
 
-      const result = await model.generateContent(prompt);
-      const response = await result.response;
-      let text = response.text().trim();
+      clearTimeout(timeoutId);
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        const errMsg = errData?.error?.message || `HTTP ${res.status}`;
+        throw new Error(errMsg);
+      }
+
+      const data = await res.json();
+      let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
 
       // Clean JSON formatting if markdown wraps it
       if (text.startsWith("```")) {
@@ -645,13 +717,15 @@ export async function estimateNutritionFromText(
         portion_description: parsed.portion_description || "ขนาด 1 ที่ปกติ",
       };
     } catch (err: any) {
-      console.warn(`[gemini-text] Model ${modelName} failed, attempting next model:`, err.message);
+      clearTimeout(timeoutId);
+      console.warn(`[gemini-text] Fast model ${modelName} failed/timed out:`, err.message);
       lastError = err;
       continue;
     }
   }
 
-  // Fallback to fuzzy offline match if AI models were busy or rate-limited
+  // Fallback to fuzzy offline match if AI models were busy, timed out, or rate-limited
+  const lowerQuery = query.toLowerCase();
   for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
     if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
       return val;
