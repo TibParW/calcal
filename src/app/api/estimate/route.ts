@@ -64,15 +64,14 @@ export async function POST(request: NextRequest) {
 }`;
 
     // Multi-Model Cascade for Text Estimation:
-    // 1. gemini-3.6-flash (Latest Official Production)
-    // 2. gemini-2.0-flash (High Throughput / Failover)
+    // 1. gemini-2.0-flash (Fastest sub-second low-latency)
+    // 2. gemini-3.6-flash (High capability failover)
     // 3. gemini-1.5-flash (Mature Stable Fallback)
     const fastModels = [
-      "gemini-3.6-flash",
       "gemini-2.0-flash",
+      "gemini-3.6-flash",
       "gemini-1.5-flash",
       "gemini-flash-latest",
-      "gemini-2.5-flash",
       "gemini-2.0-flash-lite",
     ];
 

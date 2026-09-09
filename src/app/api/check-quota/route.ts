@@ -27,13 +27,12 @@ export async function POST(request: NextRequest) {
   }
 
   // Multi-model candidate list for live probe:
-  // Google recommends gemini-3.6-flash for newer users, with fallbacks to 2.0-flash, 1.5-flash
+  // Prioritize gemini-2.0-flash for high throughput & low latency, with seamless fallbacks
   const probeModels = [
-    "gemini-3.6-flash",
     "gemini-2.0-flash",
+    "gemini-3.6-flash",
     "gemini-1.5-flash",
     "gemini-flash-latest",
-    "gemini-2.5-flash",
   ];
 
   let lastStatus = 0;
@@ -77,14 +76,22 @@ export async function POST(request: NextRequest) {
       lastRawMsg = rawMsg;
       const lowerMsg = rawMsg.toLowerCase();
 
-      // If the model is deprecated or not available to this user, automatically fallback to next candidate
+      // If the model is deprecated, not found, or in 503 High Demand, IMMEDIATELY switch to next model!
+      const isHighDemand =
+        res.status === 503 ||
+        lowerMsg.includes("high demand") ||
+        lowerMsg.includes("unavailable") ||
+        lowerMsg.includes("model_capacity_exhausted");
+
       if (
         res.status === 404 ||
+        isHighDemand ||
         lowerMsg.includes("no longer available") ||
         lowerMsg.includes("not found") ||
         lowerMsg.includes("is not supported")
       ) {
-        console.warn(`[check-quota] Model ${modelName} not available: ${rawMsg}. Trying next candidate...`);
+        console.warn(`[check-quota] Model ${modelName} encountered ${isHighDemand ? "503 High Demand" : "404 Not Supported"}. Auto-switching to next candidate model...`);
+        lastStatus = res.status;
         continue;
       }
 
@@ -118,18 +125,11 @@ export async function POST(request: NextRequest) {
         lowerMsg.includes("quota") ||
         lowerMsg.includes("rate limit");
 
-      const isHighDemand =
-        res.status === 503 ||
-        lowerMsg.includes("high demand") ||
-        lowerMsg.includes("unavailable");
-
       let friendlyMsg = rawMsg;
       if (isDaily) {
         friendlyMsg = "โควตารายวัน (Daily Limit) ของ Google AI เต็มแล้วสำหรับวันนี้ (สร้าง Key ใหม่ฟรีได้ใน Google AI Studio)";
       } else if (isRateLimit) {
         friendlyMsg = "โควตาต่อนาที (15 RPM) เต็มชั่วคราว (กรุณารอประมาณ 1 นาที)";
-      } else if (isHighDemand) {
-        friendlyMsg = "เซิร์ฟเวอร์ Google กำลังมีผู้ใช้งานหนาแน่นชั่วคราว (503 High Demand)";
       }
 
       return NextResponse.json({
@@ -139,7 +139,7 @@ export async function POST(request: NextRequest) {
         model: modelName,
         isRateLimit,
         isDaily,
-        isHighDemand,
+        isHighDemand: false,
         isKeyInvalid: false,
         message: friendlyMsg,
         rawGoogleError: rawMsg,

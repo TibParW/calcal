@@ -86,13 +86,11 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
-  "gemini-3.6-flash",
   "gemini-2.0-flash",
+  "gemini-3.6-flash",
   "gemini-1.5-flash",
   "gemini-flash-latest",
-  "gemini-2.5-flash",
   "gemini-2.0-flash-lite",
-  "gemini-2.5-pro",
 ].filter(Boolean) as string[];
 
 async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
@@ -149,14 +147,12 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
 
       // Reliable priority order with real Gemini production models
       const priority = [
-        "gemini-3.6-flash",
         "gemini-2.0-flash",
+        "gemini-3.6-flash",
         "gemini-1.5-flash",
         "gemini-flash-latest",
-        "gemini-2.5-flash",
         "gemini-2.0-flash-lite",
         "gemini-2.5-flash-lite",
-        "gemini-2.5-pro",
       ];
       flashModels.sort((a, b) => {
         const idxA = priority.indexOf(a);
@@ -247,14 +243,21 @@ export async function analyzeFoodImage(
           },
         });
 
-        const result = await model.generateContent([
-          prompt,
-          imagePart,
-        ]);
+        // Set a 6.5s timeout per model: if a model hangs from 503 high demand queueing,
+        // immediately escape and jump to the next candidate model!
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("MODEL_TIMEOUT: เซิร์ฟเวอร์ตอบสนองช้าเกินไป")), 6500)
+        );
+
+        const result = (await Promise.race([
+          model.generateContent([prompt, imagePart]),
+          timeoutPromise,
+        ])) as any;
 
         const response = await result.response;
         rawText = response.text();
         if (rawText && rawText.trim().length > 0) {
+          console.log(`[Gemini API] Successfully analyzed with model "${modelName}"`);
           break; // Successfully got response
         }
       } catch (err: any) {
