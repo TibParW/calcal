@@ -64,12 +64,14 @@ export async function POST(request: NextRequest) {
 }`;
 
     // Multi-Model Cascade for Text Estimation:
-    // 1. gemini-1.5-flash (Mature Stable Production)
-    // 2. gemini-1.5-flash-latest
-    // 3. gemini-2.0-flash (Fastest sub-second low-latency)
+    // Supports 3.x Flash as well as legacy production keys
     const fastModels = [
+      "gemini-3.5-flash",
+      "gemini-3.7-flash",
+      "gemini-3.6-flash",
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
       "gemini-1.5-flash",
-      "gemini-1.5-flash-latest",
       "gemini-2.0-flash",
       "gemini-flash-latest",
     ];
