@@ -4,6 +4,8 @@ import {
   X,
   Trash2,
   ExternalLink,
+  Sun,
+  Moon,
 } from "lucide-react";
 import {
   clearAllData,
@@ -11,6 +13,7 @@ import {
   stripOldThumbnails,
 } from "@/lib/storage";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -30,6 +33,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onOpenTdeeModal,
 }) => {
   const { lang, t } = useLanguage();
+  const { theme, setTheme } = useTheme();
   const [dailyGoal, setDailyGoal] = useState(settings.daily_goal || 2000);
   const [proteinGoal, setProteinGoal] = useState(settings.protein_goal_g || 100);
   const [carbsGoal, setCarbsGoal] = useState(settings.carbs_goal_g || 250);
@@ -177,6 +181,39 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="w-full px-2 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-center font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Theme / Appearance */}
+          <div className="space-y-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
+              {t("theme_title")}
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setTheme("light")}
+                className={`p-2.5 rounded-2xl border flex items-center justify-center gap-2 transition ${
+                  theme === "light"
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent shadow-xs font-semibold"
+                    : "bg-neutral-100/60 dark:bg-neutral-800/40 text-neutral-700 dark:text-neutral-300 border-neutral-200/50 dark:border-neutral-700/50"
+                }`}
+              >
+                <Sun className="w-4 h-4 text-amber-500" />
+                <span className="text-xs">{t("theme_light")}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setTheme("dark")}
+                className={`p-2.5 rounded-2xl border flex items-center justify-center gap-2 transition ${
+                  theme === "dark"
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent shadow-xs font-semibold"
+                    : "bg-neutral-100/60 dark:bg-neutral-800/40 text-neutral-700 dark:text-neutral-300 border-neutral-200/50 dark:border-neutral-700/50"
+                }`}
+              >
+                <Moon className="w-4 h-4 text-indigo-400" />
+                <span className="text-xs">{t("theme_dark")}</span>
+              </button>
             </div>
           </div>
 

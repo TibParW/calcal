@@ -114,6 +114,10 @@ export const translations = {
     settings_cancel_action: "ยกเลิก",
     settings_clear_confirm: "คุณแน่ใจหรือไม่ว่าต้องการลบข้อมูลทั้งหมด? ข้อมูลทั้งหมดจะหายไปอย่างถาวร",
     settings_save_btn: "บันทึกการตั้งค่า",
+    theme_title: "โหมดการแสดงผล",
+    theme_light: "สว่าง",
+    theme_dark: "มืด",
+    theme_toggle: "สลับโหมดมืด/สว่าง",
 
     // TDEE Modal
     tdee_title: "คำนวณเป้าหมายส่วนบุคคล",
@@ -267,6 +271,10 @@ export const translations = {
     settings_cancel_action: "Cancel",
     settings_clear_confirm: "Are you sure you want to delete all data? This cannot be undone.",
     settings_save_btn: "Save Settings",
+    theme_title: "Appearance",
+    theme_light: "Light",
+    theme_dark: "Dark",
+    theme_toggle: "Toggle dark/light mode",
 
     // TDEE Modal
     tdee_title: "Personal Goal Calculator",

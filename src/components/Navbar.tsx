@@ -1,6 +1,7 @@
 import React from "react";
-import { Settings, History } from "lucide-react";
+import { Settings, History, Sun, Moon } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { useTheme } from "@/context/ThemeContext";
 
 interface NavbarProps {
   onOpenSettings: () => void;
@@ -9,6 +10,7 @@ interface NavbarProps {
 
 export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory }) => {
   const { lang, setLang, t } = useLanguage();
+  const { theme, toggleTheme } = useTheme();
 
   return (
     <header className="sticky top-0 z-30 bg-[#fafaf9]/85 dark:bg-[#0c0c0e]/85 backdrop-blur-md border-b border-neutral-200/50 dark:border-neutral-800/60 transition-colors">
@@ -50,6 +52,21 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
               EN
             </button>
           </div>
+
+          {/* Theme Toggle Button (Light / Dark) */}
+          <button
+            type="button"
+            onClick={toggleTheme}
+            aria-label={t("theme_toggle")}
+            title={theme === "dark" ? t("theme_light") : t("theme_dark")}
+            className="p-1.5 rounded-lg text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white hover:bg-neutral-100 dark:hover:bg-neutral-800/60 transition active:scale-95"
+          >
+            {theme === "dark" ? (
+              <Sun className="w-[18px] h-[18px] stroke-[1.8] text-amber-400" />
+            ) : (
+              <Moon className="w-[18px] h-[18px] stroke-[1.8] text-neutral-600 dark:text-neutral-300" />
+            )}
+          </button>
 
           <button
             onClick={onOpenHistory}
