@@ -97,6 +97,19 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
   const [customApiKey, setCustomApiKey] = useState<string>("");
   const [showKeyInput, setShowKeyInput] = useState<boolean>(false);
   const [cooldownSec, setCooldownSec] = useState<number>(0);
+  const [loadingStep, setLoadingStep] = useState<number>(0);
+
+  // Animate loading step stages so the user sees continuous progress
+  useEffect(() => {
+    if (!isLoading) {
+      setLoadingStep(0);
+      return;
+    }
+    const interval = setInterval(() => {
+      setLoadingStep((prev) => (prev + 1) % 3);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [isLoading]);
 
   // Monitor live cooldown countdown if rate-limited (HTTP 429)
   useEffect(() => {
@@ -310,10 +323,18 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                   <div className="absolute w-full h-0.5 bg-white shadow-lg animate-scanner" />
                   <div className="bg-neutral-900/85 text-white px-3 py-1.5 rounded-full text-xs font-medium backdrop-blur-md flex items-center gap-1.5">
                     <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-spin" />
-                    <span>
+                    <span className="transition-all duration-300">
                       {isNutritionMode
-                        ? (lang === "en" ? "Reading nutrition facts table..." : "กำลังอ่านตารางโภชนาการ...")
-                        : (lang === "en" ? "AI detecting food items..." : "AI กำลังแยกแยะเมนูอาหาร...")}
+                        ? (loadingStep === 0
+                            ? (lang === "en" ? "Reading nutrition facts table..." : "กำลังอ่านตารางโภชนาการ...")
+                            : loadingStep === 1
+                            ? (lang === "en" ? "Extracting calories & macros..." : "กำลังถอดรหัสสารอาหาร...")
+                            : (lang === "en" ? "Verifying values..." : "กำลังตรวจสอบความถูกต้อง..."))
+                        : (loadingStep === 0
+                            ? (lang === "en" ? "AI detecting food items..." : "AI กำลังแยกแยะเมนูอาหาร...")
+                            : loadingStep === 1
+                            ? (lang === "en" ? "Estimating portion sizes..." : "กำลังประเมินขนาดจานและสัดส่วน...")
+                            : (lang === "en" ? "Calculating calories & macros..." : "กำลังคำนวณแคลอรีและสารอาหาร..."))}
                     </span>
                   </div>
                 </div>

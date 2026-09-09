@@ -203,7 +203,8 @@ export async function analyzeFoodImage(
     ? base64Data.split(",")[1]
     : base64Data).trim().replace(/\s+/g, "");
 
-  const candidateModels = await getAvailableGeminiModels(apiKey);
+  // Use candidate models directly to avoid 1.5s extra roundtrip for model list discovery
+  const candidateModels = STATIC_CANDIDATE_MODELS;
   const genAI = new GoogleGenerativeAI(apiKey);
 
   const systemInstruction =
@@ -231,8 +232,8 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
-    // Try up to top 4 candidate models to provide maximum resilience across different clusters
-    const modelsToTry = candidateModels.slice(0, 4);
+    // Try up to top 3 candidate models
+    const modelsToTry = candidateModels.slice(0, 3);
 
     for (const modelName of modelsToTry) {
       try {
@@ -241,8 +242,8 @@ export async function analyzeFoodImage(
           systemInstruction: systemInstruction,
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 1.0,
-            maxOutputTokens: 2048,
+            temperature: 0.4,
+            maxOutputTokens: 1536,
           },
         });
 
