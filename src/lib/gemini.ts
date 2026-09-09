@@ -470,6 +470,14 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     portion_description: "1 ฟอง ทอดน้ำมัน",
     source: "offline",
   },
+  "ไข่เจียว": {
+    food_name: "ไข่เจียว",
+    food_name_en: "Thai Omelet",
+    calories: 250,
+    macronutrients: { protein_g: 12, carbs_g: 2, fat_g: 22 },
+    portion_description: "1 จาน (ไข่ 2 ฟอง)",
+    source: "offline",
+  },
   "ข้าวสวย": {
     food_name: "ข้าวสวย",
     food_name_en: "Steamed White Rice",
@@ -486,6 +494,14 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     portion_description: "1 ทัพพี (~100g)",
     source: "offline",
   },
+  "ข้าวเหนียว": {
+    food_name: "ข้าวเหนียว",
+    food_name_en: "Sticky Rice",
+    calories: 160,
+    macronutrients: { protein_g: 3, carbs_g: 36, fat_g: 0.5 },
+    portion_description: "1 ห่อเล็ก (~100g)",
+    source: "offline",
+  },
   "อกไก่": {
     food_name: "อกไก่ต้ม",
     food_name_en: "Boiled Chicken Breast",
@@ -500,6 +516,110 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 180,
     macronutrients: { protein_g: 30, carbs_g: 1, fat_g: 5 },
     portion_description: "อกไก่ย่าง 1 ชิ้น (~120g)",
+    source: "offline",
+  },
+  "ไก่ย่าง": {
+    food_name: "ไก่ย่าง",
+    food_name_en: "Grilled Chicken",
+    calories: 220,
+    macronutrients: { protein_g: 28, carbs_g: 2, fat_g: 11 },
+    portion_description: "1 ชิ้นน่อง/สะโพก (~150g)",
+    source: "offline",
+  },
+  "ลิ้นวัวน้ำตก": {
+    food_name: "ลิ้นวัวน้ำตก",
+    food_name_en: "Spicy Grilled Beef Tongue Salad (Nam Tok)",
+    calories: 220,
+    macronutrients: { protein_g: 20, carbs_g: 5, fat_g: 13 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "ลิ้นวัว": {
+    food_name: "ลิ้นวัวย่าง",
+    food_name_en: "Grilled Beef Tongue",
+    calories: 220,
+    macronutrients: { protein_g: 19, carbs_g: 1, fat_g: 15 },
+    portion_description: "1 จาน (~120g)",
+    source: "offline",
+  },
+  "น้ำตกเนื้อ": {
+    food_name: "น้ำตกเนื้อ",
+    food_name_en: "Spicy Grilled Beef Salad",
+    calories: 210,
+    macronutrients: { protein_g: 22, carbs_g: 4, fat_g: 12 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "น้ำตกหมู": {
+    food_name: "น้ำตกหมู",
+    food_name_en: "Spicy Grilled Pork Salad",
+    calories: 230,
+    macronutrients: { protein_g: 18, carbs_g: 4, fat_g: 16 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "น้ำตก": {
+    food_name: "น้ำตกหมู/เนื้อ",
+    food_name_en: "Spicy Grilled Meat Salad",
+    calories: 220,
+    macronutrients: { protein_g: 20, carbs_g: 4, fat_g: 14 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "ลาบหมู": {
+    food_name: "ลาบหมู",
+    food_name_en: "Spicy Minced Pork Salad (Larb)",
+    calories: 180,
+    macronutrients: { protein_g: 22, carbs_g: 5, fat_g: 8 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "ลาบ": {
+    food_name: "ลาบหมู",
+    food_name_en: "Spicy Minced Meat Salad (Larb)",
+    calories: 180,
+    macronutrients: { protein_g: 22, carbs_g: 5, fat_g: 8 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "คอหมูย่าง": {
+    food_name: "คอหมูย่าง",
+    food_name_en: "Grilled Pork Neck",
+    calories: 280,
+    macronutrients: { protein_g: 18, carbs_g: 2, fat_g: 22 },
+    portion_description: "1 จาน (~120g)",
+    source: "offline",
+  },
+  "หมูปิ้ง": {
+    food_name: "หมูปิ้ง",
+    food_name_en: "Grilled Pork Skewer",
+    calories: 130,
+    macronutrients: { protein_g: 8, carbs_g: 4, fat_g: 9 },
+    portion_description: "1 ไม้ (~40g)",
+    source: "offline",
+  },
+  "ส้มตำไทย": {
+    food_name: "ส้มตำไทย",
+    food_name_en: "Som Tum Thai (Papaya Salad)",
+    calories: 120,
+    macronutrients: { protein_g: 3, carbs_g: 25, fat_g: 1 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "ส้มตำปูปลาร้า": {
+    food_name: "ส้มตำปูปลาร้า",
+    food_name_en: "Som Tum Poo Plara",
+    calories: 80,
+    macronutrients: { protein_g: 4, carbs_g: 15, fat_g: 1 },
+    portion_description: "1 จาน (~150g)",
+    source: "offline",
+  },
+  "ส้มตำ": {
+    food_name: "ส้มตำ",
+    food_name_en: "Papaya Salad (Som Tum)",
+    calories: 110,
+    macronutrients: { protein_g: 3, carbs_g: 22, fat_g: 1 },
+    portion_description: "1 จาน (~150g)",
     source: "offline",
   },
   "แอปเปิ้ล": {
@@ -534,12 +654,116 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     portion_description: "1 จานธรรมดา",
     source: "offline",
   },
+  "ข้าวกะเพราหมูสับ": {
+    food_name: "ข้าวกะเพราหมูสับ",
+    food_name_en: "Basil Minced Pork with Rice",
+    calories: 580,
+    macronutrients: { protein_g: 24, carbs_g: 65, fat_g: 24 },
+    portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
+  "กะเพราหมูสับ": {
+    food_name: "กะเพราหมูสับ",
+    food_name_en: "Basil Minced Pork with Rice",
+    calories: 580,
+    macronutrients: { protein_g: 24, carbs_g: 65, fat_g: 24 },
+    portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
   "ข้าวมันไก่": {
     food_name: "ข้าวมันไก่",
     food_name_en: "Hainanese Chicken Rice",
     calories: 580,
     macronutrients: { protein_g: 24, carbs_g: 68, fat_g: 23 },
     portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
+  "ข้าวขาหมู": {
+    food_name: "ข้าวขาหมู",
+    food_name_en: "Stewed Pork Leg with Rice",
+    calories: 650,
+    macronutrients: { protein_g: 22, carbs_g: 65, fat_g: 32 },
+    portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
+  "ข้าวผัด": {
+    food_name: "ข้าวผัดหมู/ไก่",
+    food_name_en: "Fried Rice",
+    calories: 550,
+    macronutrients: { protein_g: 18, carbs_g: 72, fat_g: 20 },
+    portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
+  "ผัดไทย": {
+    food_name: "ผัดไทยกุ้งสด",
+    food_name_en: "Pad Thai",
+    calories: 550,
+    macronutrients: { protein_g: 18, carbs_g: 70, fat_g: 22 },
+    portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
+  "ผัดซีอิ๊ว": {
+    food_name: "ผัดซีอิ๊วหมู",
+    food_name_en: "Pad See Ew",
+    calories: 580,
+    macronutrients: { protein_g: 20, carbs_g: 65, fat_g: 26 },
+    portion_description: "1 จานธรรมดา",
+    source: "offline",
+  },
+  "ก๋วยเตี๋ยวเรือ": {
+    food_name: "ก๋วยเตี๋ยวเรือหมู/เนื้อ",
+    food_name_en: "Boat Noodles",
+    calories: 350,
+    macronutrients: { protein_g: 18, carbs_g: 45, fat_g: 10 },
+    portion_description: "1 ชามปกติ",
+    source: "offline",
+  },
+  "สุกี้แห้ง": {
+    food_name: "สุกี้แห้งไก่/หมู",
+    food_name_en: "Dry Suki",
+    calories: 380,
+    macronutrients: { protein_g: 22, carbs_g: 35, fat_g: 16 },
+    portion_description: "1 จานปกติ",
+    source: "offline",
+  },
+  "สุกี้น้ำ": {
+    food_name: "สุกี้น้ำไก่/หมู",
+    food_name_en: "Soup Suki",
+    calories: 320,
+    macronutrients: { protein_g: 20, carbs_g: 30, fat_g: 12 },
+    portion_description: "1 ชามปกติ",
+    source: "offline",
+  },
+  "ต้มยำกุ้ง": {
+    food_name: "ต้มยำกุ้ง",
+    food_name_en: "Tom Yum Goong",
+    calories: 150,
+    macronutrients: { protein_g: 18, carbs_g: 6, fat_g: 5 },
+    portion_description: "1 ถ้วยแกง",
+    source: "offline",
+  },
+  "แกงเขียวหวาน": {
+    food_name: "แกงเขียวหวานไก่",
+    food_name_en: "Green Curry Chicken",
+    calories: 320,
+    macronutrients: { protein_g: 14, carbs_g: 8, fat_g: 26 },
+    portion_description: "1 ถ้วยแกง",
+    source: "offline",
+  },
+  "นมจืด": {
+    food_name: "นมสดรสจืด",
+    food_name_en: "Plain Milk",
+    calories: 130,
+    macronutrients: { protein_g: 8, carbs_g: 12, fat_g: 5 },
+    portion_description: "1 กล่อง (200ml)",
+    source: "offline",
+  },
+  "เวย์โปรตีน": {
+    food_name: "เวย์โปรตีน",
+    food_name_en: "Whey Protein",
+    calories: 120,
+    macronutrients: { protein_g: 25, carbs_g: 2, fat_g: 1.5 },
+    portion_description: "1 สกู๊ป (~30g)",
     source: "offline",
   },
 };
@@ -616,140 +840,58 @@ export async function estimateNutritionFromText(
     return offlineMatch;
   }
 
-  const apiKey = (userApiKey || process.env.GEMINI_API_KEY || "").trim();
+  // 2. Call server-side /api/estimate with strict 4.5s timeout (prevents long hangs and CORS issues)
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 4500);
 
-  // If no API key is available, check fuzzy match in offline dictionary
-  if (!apiKey) {
+  try {
+    const headers: Record<string, string> = {
+      "Content-Type": "application/json",
+    };
+    if (userApiKey && userApiKey.trim()) {
+      headers["x-gemini-api-key"] = userApiKey.trim();
+    }
+
+    const res = await fetch("/api/estimate", {
+      method: "POST",
+      headers,
+      signal: controller.signal,
+      body: JSON.stringify({ query }),
+    });
+
+    clearTimeout(timeoutId);
+
+    const data = await res.json().catch(() => ({}));
+
+    if (!res.ok) {
+      const errMsg = data.error || `HTTP ${res.status}`;
+      throw new Error(errMsg);
+    }
+
+    return {
+      food_name: data.food_name || query,
+      food_name_en: data.food_name_en || "",
+      calories: data.calories || 0,
+      macronutrients: data.macronutrients || { protein_g: 0, carbs_g: 0, fat_g: 0 },
+      portion_description: data.portion_description || "ขนาด 1 ที่ปกติ",
+      source: "ai",
+    };
+  } catch (apiErr: any) {
+    clearTimeout(timeoutId);
+
+    // If fetch failed, was aborted, or server error, check fuzzy match in offline dictionary
     const lowerQuery = query.toLowerCase();
     for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
       if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
         return val;
       }
     }
-    throw new Error(
-      "MISSING_API_KEY: ไม่พบ Gemini API Key ในระบบเพื่อคำนวณอาหารนอกตาราง กรุณากรอก API Key ในหน้าต่างตั้งค่า"
-    );
-  }
 
-  // Priority fast models for text estimation
-  const fastModels = [
-    "gemini-2.5-flash-lite",
-    "gemini-3.6-flash",
-    "gemini-flash-latest",
-  ];
-
-  const prompt = `คุณคือผู้เชี่ยวชาญด้านโภชนาการอาหาร หน้าที่ของคุณคือประมาณค่าพลังงานรวม (kcal) และสารอาหารหลัก (โปรตีน, คาร์บ, ไขมัน ในหน่วยกรัม) ของอาหารที่ระบุต่อไปนี้:
-"${query}"
-
-ข้อกำหนด:
-1. ตรวจสอบก่อนว่าข้อความนี้คือ "อาหาร/เครื่องดื่มที่มนุษย์บริโภคได้" หรือไม่
-2. หากข้อความ "ไม่ใช่ชื่ออาหาร", "เป็นสิ่งของทั่วไป", หรือ "เป็นตัวอักษรพิมพ์มั่ว" (เช่น asdf, กกกก, โต๊ะ, เก้าอี้, 12345) ให้ตอบกลับรูปแบบนี้ทันที:
-{
-  "is_food": false,
-  "error_message": "ไม่พบว่าเป็นชื่ออาหาร กรุณาระบุชื่อเมนูอาหารใหม่อีกครั้ง"
-}
-3. หากเป็นอาหารหรือเครื่องดื่ม ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving) หรือตามจำนวนที่ระบุ
-4. ปัดตัวเลขแคลอรีและสารอาหารเป็นจำนวนเต็มหรือทศนิยม 1 ตำแหน่ง
-5. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
-{
-  "is_food": true,
-  "food_name": "${query}",
-  "food_name_en": "Food Name English",
-  "calories": 120,
-  "macronutrients": {
-    "protein_g": 1.3,
-    "carbs_g": 27,
-    "fat_g": 0.3
-  },
-  "portion_description": "ขนาด 1 ที่ (~120g)"
-}`;
-
-  let lastError: any = null;
-
-  // Try fast direct fetch with a strict 3.5s timeout per model (prevents long hangs)
-  for (const modelName of fastModels) {
-    const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 3500);
-
-    try {
-      const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
-      const res = await fetch(url, {
-        method: "POST",
-        signal: controller.signal,
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.2,
-            maxOutputTokens: 1024,
-          },
-        }),
-      });
-
-      clearTimeout(timeoutId);
-
-      if (!res.ok) {
-        const errData = await res.json().catch(() => ({}));
-        const errMsg = errData?.error?.message || `HTTP ${res.status}`;
-        throw new Error(errMsg);
-      }
-
-      const data = await res.json();
-      let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
-
-      // Clean JSON formatting if markdown wraps it
-      if (text.startsWith("```")) {
-        text = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
-      }
-
-      const parsed = JSON.parse(text);
-
-      if (parsed.is_food === false) {
-        throw new Error(parsed.error_message || "ไม่พบว่าเป็นชื่ออาหาร กรุณาระบุชื่อเมนูอาหารใหม่อีกครั้ง");
-      }
-
-      const parseNum = (val: any): number => {
-        if (typeof val === "number") return isNaN(val) ? 0 : val;
-        if (typeof val === "string") {
-          const match = val.match(/[\d.]+/);
-          return match ? parseFloat(match[0]) : 0;
-        }
-        return 0;
-      };
-
-      const cals = parseNum(parsed.calories || parsed.estimated_calories);
-      const p = parseNum(parsed.macronutrients?.protein_g);
-      const c = parseNum(parsed.macronutrients?.carbs_g);
-      const f = parseNum(parsed.macronutrients?.fat_g);
-
-      return {
-        food_name: parsed.food_name || query,
-        food_name_en: parsed.food_name_en || "",
-        calories: Math.max(0, Math.round(cals)),
-        macronutrients: {
-          protein_g: Math.max(0, Number(p.toFixed(1))),
-          carbs_g: Math.max(0, Number(c.toFixed(1))),
-          fat_g: Math.max(0, Number(f.toFixed(1))),
-        },
-        portion_description: parsed.portion_description || "ขนาด 1 ที่ปกติ",
-        source: "ai",
-      };
-    } catch (err: any) {
-      clearTimeout(timeoutId);
-      console.warn(`[gemini-text] Fast model ${modelName} failed/timed out:`, err.message);
-      lastError = err;
-      continue;
+    if (apiErr.name === "AbortError" || apiErr.message?.includes("aborted")) {
+      throw new Error("การคำนวณใช้เวลานานเกินไป กรุณากรอกด้วยตนเอง หรือลองใหม่อีกครั้ง");
     }
-  }
 
-  // Fallback to fuzzy offline match if AI models were busy, timed out, or rate-limited
-  const lowerQuery = query.toLowerCase();
-  for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
-    if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
-      return val;
-    }
+    throw apiErr;
   }
-
-  throw lastError || new Error("ไม่สามารถประเมินแคลอรีได้ในขณะนี้ กรุณากรอกด้วยตนเอง");
 }
 

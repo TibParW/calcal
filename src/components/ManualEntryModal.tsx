@@ -42,6 +42,16 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
     setEstimateError(null);
     setEstimateHint(null);
 
+    // Hard safety timeout: under NO circumstances will this spin longer than 5 seconds
+    const safetyTimeout = setTimeout(() => {
+      setIsEstimating(false);
+      setEstimateError(
+        lang === "en"
+          ? "Calculation took too long. Please enter manually or try again."
+          : "การคำนวณใช้เวลานานเกินไป กรุณากรอกด้วยตนเอง หรือลองใหม่อีกครั้ง"
+      );
+    }, 5000);
+
     try {
       const settings = getUserSettings();
       const apiKey = settings.gemini_api_key?.trim();
@@ -84,6 +94,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
         err.message?.replace(/^MISSING_API_KEY:\s*/, "") || "ไม่สามารถคำนวณได้ กรุณากรอกด้วยตนเอง"
       );
     } finally {
+      clearTimeout(safetyTimeout);
       setIsEstimating(false);
     }
   };
