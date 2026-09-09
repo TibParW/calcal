@@ -99,51 +99,45 @@ export const CameraAction: React.FC<CameraActionProps> = ({
         disabled={disabled}
       />
 
-      {/* Live AI Quota Progress Bar */}
-      <div
+      {/* Ultra-Minimalist Live AI Quota Indicator */}
+      <button
+        type="button"
         onClick={onOpenSettings}
-        role="button"
-        tabIndex={0}
-        title={lang === "en" ? "Click to view full API Quota in Settings" : "แตะเพื่อดูรายละเอียดโควตาในหน้าตั้งค่า"}
-        className="p-2.5 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 transition hover:border-neutral-300 dark:hover:border-neutral-700 active:scale-[0.99] space-y-1.5 cursor-pointer shadow-xs"
+        title={lang === "en" ? "AI Quota: Click for settings" : "โควตาสแกน AI: แตะเพื่อดูการตั้งค่า"}
+        className="w-full flex items-center justify-between px-1 py-0.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 transition cursor-pointer select-none group"
       >
-        <div className="flex items-center justify-between text-[11px]">
-          <div className="flex items-center gap-1.5">
-            <Zap className={`w-3.5 h-3.5 ${inCooldown ? "text-rose-500 animate-spin" : isHighRpm ? "text-amber-500" : "text-emerald-500"}`} />
-            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
-              {inCooldown
-                ? (lang === "en" ? `Quota resetting in ${cooldownSec}s...` : `รีเซ็ตโควตาใน ${cooldownSec} วินาที...`)
-                : (lang === "en" ? "AI Scans Remaining" : "โควตาสแกน AI")}
-            </span>
-          </div>
-
-          <span className="font-mono font-bold text-xs text-neutral-900 dark:text-neutral-100">
+        <div className="flex items-center gap-1.5">
+          <span
+            className={`w-1.5 h-1.5 rounded-full transition-colors ${
+              inCooldown ? "bg-rose-500 animate-ping" : isHighRpm ? "bg-amber-500" : "bg-emerald-500"
+            }`}
+          />
+          <span className="text-[11px] font-medium tracking-tight">
             {inCooldown
-              ? `${cooldownSec}s`
-              : `${rpmRemaining}/15 ${lang === "en" ? "left" : "ครั้ง"}`}
+              ? (lang === "en" ? `Resetting in ${cooldownSec}s` : `รีเซ็ตใน ${cooldownSec} วิ`)
+              : (lang === "en" ? "AI Quota" : "โควตา AI")}
           </span>
         </div>
 
-        {/* Progress Track */}
-        <div className="w-full h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
-          <div
-            className={`h-full rounded-full transition-all duration-500 ${
-              inCooldown ? "bg-rose-500" : isHighRpm ? "bg-amber-500" : "bg-emerald-500"
-            }`}
-            style={{
-              width: inCooldown
-                ? `${Math.max(4, Math.min(100, (cooldownSec / 60) * 100))}%`
-                : `${Math.max(4, Math.min(100, (rpmRemaining / 15) * 100))}%`,
-            }}
-          />
+        {/* Slender Micro Bar */}
+        <div className="flex items-center gap-2">
+          <div className="w-20 sm:w-24 h-1 rounded-full bg-neutral-200/80 dark:bg-neutral-800 overflow-hidden">
+            <div
+              className={`h-full rounded-full transition-all duration-500 ${
+                inCooldown ? "bg-rose-500" : isHighRpm ? "bg-amber-500" : "bg-emerald-500"
+              }`}
+              style={{
+                width: inCooldown
+                  ? `${Math.max(6, Math.min(100, (cooldownSec / 60) * 100))}%`
+                  : `${Math.max(6, Math.min(100, (rpmRemaining / 15) * 100))}%`,
+              }}
+            />
+          </div>
+          <span className="font-mono text-[10px] font-medium text-neutral-500 dark:text-neutral-400 min-w-[32px] text-right">
+            {inCooldown ? `${cooldownSec}s` : `${rpmRemaining}/15`}
+          </span>
         </div>
-
-        {/* Sub-label */}
-        <div className="flex items-center justify-between text-[10px] text-neutral-400 dark:text-neutral-500">
-          <span>{lang === "en" ? "15 req/min limit" : "ความถี่ 15 ครั้ง/นาที"}</span>
-          <span>{lang === "en" ? `Today: ${quota.requestsToday} scans` : `วันนี้สแกนไป: ${quota.requestsToday} ครั้ง`}</span>
-        </div>
-      </div>
+      </button>
 
       {/* Primary Scan Buttons (Food & Nutrition Label) */}
       <div className="grid grid-cols-2 gap-2">
