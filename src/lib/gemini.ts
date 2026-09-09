@@ -569,10 +569,17 @@ export async function estimateNutritionFromText(
 "${query}"
 
 ข้อกำหนด:
-1. หากไม่ได้ระบุขนาด ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving)
-2. ปัดตัวเลขแคลอรีและสารอาหารเป็นจำนวนเต็มหรือทศนิยม 1 ตำแหน่ง
-3. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
+1. ตรวจสอบก่อนว่าข้อความนี้คือ "อาหาร/เครื่องดื่มที่มนุษย์บริโภคได้" หรือไม่
+2. หากข้อความ "ไม่ใช่ชื่ออาหาร", "เป็นสิ่งของทั่วไป", หรือ "เป็นตัวอักษรพิมพ์มั่ว" (เช่น asdf, กกกก, โต๊ะ, เก้าอี้, 12345) ให้ตอบกลับรูปแบบนี้ทันที:
 {
+  "is_food": false,
+  "error_message": "ไม่พบว่าเป็นชื่ออาหาร กรุณาระบุชื่อเมนูอาหารใหม่อีกครั้ง"
+}
+3. หากเป็นอาหารหรือเครื่องดื่ม ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving)
+4. ปัดตัวเลขแคลอรีและสารอาหารเป็นจำนวนเต็มหรือทศนิยม 1 ตำแหน่ง
+5. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
+{
+  "is_food": true,
   "food_name": "${query}",
   "food_name_en": "Food Name English",
   "calories": 120,
@@ -607,6 +614,10 @@ export async function estimateNutritionFromText(
       }
 
       const parsed = JSON.parse(text);
+
+      if (parsed.is_food === false) {
+        throw new Error(parsed.error_message || "ไม่พบว่าเป็นชื่ออาหาร กรุณาระบุชื่อเมนูอาหารใหม่อีกครั้ง");
+      }
 
       const parseNum = (val: any): number => {
         if (typeof val === "number") return isNaN(val) ? 0 : val;
