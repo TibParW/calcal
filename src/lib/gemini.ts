@@ -229,8 +229,8 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
-    // Try up to top 3 candidate models to stay well within execution limits while providing reliable failover
-    const modelsToTry = candidateModels.slice(0, 3);
+    // Try up to top 4 candidate models to provide maximum resilience across different clusters
+    const modelsToTry = candidateModels.slice(0, 4);
 
     for (const modelName of modelsToTry) {
       try {
@@ -258,69 +258,50 @@ export async function analyzeFoodImage(
         console.warn(`[Gemini API] Candidate model "${modelName}" failed:`, err?.message || err);
         lastError = err;
 
-        const msg = err?.message || "";
-        // If 404 (model retired/not found) or unsupported method, try next candidate
-        if (
-          msg.includes("404") ||
-          msg.includes("not found") ||
-          msg.includes("not supported") ||
-          err?.status === 404
-        ) {
-          continue;
-        }
+        const msg = (err?.message || "").toLowerCase();
+        const status = err?.status || err?.response?.status || 0;
 
-        // If invalid API key, throw immediate user-friendly error
+        // If invalid API key, throw immediate error (no fallback will resolve an invalid key)
         if (
-          msg.includes("API_KEY_INVALID") ||
-          msg.includes("API key not valid") ||
-          msg.includes("API_KEY_EXPIRED") ||
-          err?.status === 400
+          msg.includes("api_key_invalid") ||
+          msg.includes("api key not valid") ||
+          msg.includes("api_key_expired") ||
+          status === 400
         ) {
           throw new Error("API_KEY_INVALID: Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
         }
 
-        // If quota exceeded (429), try next candidate without delay
-        if (
-          msg.includes("QUOTA_EXCEEDED") ||
-          msg.includes("RESOURCE_EXHAUSTED") ||
-          err?.status === 429
-        ) {
-          console.warn(`[Gemini API] Quota limit hit on "${modelName}", trying alternate candidate model...`);
-          continue;
-        }
-
-        // If high demand (503 / UNAVAILABLE / overloaded), try next candidate model immediately
-        if (
-          msg.includes("high demand") ||
-          msg.includes("503") ||
-          msg.includes("UNAVAILABLE") ||
-          msg.includes("overloaded") ||
-          err?.status === 503
-        ) {
-          console.warn(`[Gemini API] Model "${modelName}" is experiencing high demand (503), switching to backup model...`);
-          continue;
-        }
+        // For any other error (rate limit 429, daily quota, high demand 503, 404 not found, 500 server error):
+        // Automatically proceed to the next alternate candidate model immediately
+        console.warn(`[Gemini API] Switching to next candidate model after "${modelName}" failure...`);
+        continue;
       }
     }
 
   if (!rawText) {
     console.error("All Gemini candidate models failed. Last error:", lastError);
-    if (
-      lastError?.message?.includes("404") ||
-      lastError?.message?.includes("not found")
-    ) {
+    const lastMsg = (lastError?.message || "").toLowerCase();
+    const isDailyQuota =
+      lastMsg.includes("per day") ||
+      lastMsg.includes("perday") ||
+      lastMsg.includes("daily");
+
+    if (isDailyQuota) {
       throw new Error(
-        "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' หรือตรวจสอบสัญญาณอินเทอร์เน็ต"
+        "DAILY_QUOTA_EXCEEDED: โควตารายวัน (Daily Limit) ของ Google AI ครบกำหนดแล้วสำหรับวันนี้ (Google รีเซ็ตโควตารายวันตอนบ่าย 2-3 โมงตามเวลาไทย หรือคุณสามารถสร้าง Gemini API Key ใหม่ฟรีใน Google AI Studio แล้วนำมาเปลี่ยนในหน้าตั้งค่าเพื่อใช้งานต่อได้ทันทีครับ)"
       );
     }
+
     if (
-      lastError?.message?.includes("QUOTA_EXCEEDED") ||
-      lastError?.message?.includes("RESOURCE_EXHAUSTED") ||
+      lastMsg.includes("429") ||
+      lastMsg.includes("quota") ||
+      lastMsg.includes("resource_exhausted") ||
+      lastMsg.includes("exhausted") ||
       lastError?.status === 429
     ) {
       if (userApiKey) {
         throw new Error(
-          "โควตาการเรียกใช้งานของ Google AI เต็มชั่วคราว (Google จำกัดจำนวนครั้งต่อนาทีบน Free Tier) กรุณารอประมาณ 1 นาทีแล้วกด 'ลองใหม่อีกครั้ง' ครับ"
+          "โควตาการเรียกใช้งานของ Google AI เต็มชั่วคราว (Google จำกัด 15 ครั้งต่อนาทีบน Free Tier) กรุณารอประมาณ 1 นาทีแล้วกด 'ลองใหม่อีกครั้ง' หรือเปลี่ยน API Key ใหม่ได้ในหน้าต่างนี้ครับ"
         );
       } else {
         throw new Error(
@@ -328,16 +309,24 @@ export async function analyzeFoodImage(
         );
       }
     }
+
     if (
-      lastError?.message?.includes("high demand") ||
-      lastError?.message?.includes("503") ||
-      lastError?.message?.includes("UNAVAILABLE") ||
+      lastMsg.includes("high demand") ||
+      lastMsg.includes("503") ||
+      lastMsg.includes("unavailable") ||
       lastError?.status === 503
     ) {
       throw new Error(
         "เซิร์ฟเวอร์ Google AI กำลังมีผู้ใช้งานหนาแน่นชั่วคราว (High Demand) กรุณารอสักครู่แล้วกดปุ่ม 'ลองใหม่อีกครั้ง' ครับ"
       );
     }
+
+    if (lastMsg.includes("404") || lastMsg.includes("not found")) {
+      throw new Error(
+        "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' หรือตรวจสอบสัญญาณอินเทอร์เน็ต"
+      );
+    }
+
     throw lastError || new Error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพอาหารด้วย AI กรุณาลองใหม่อีกครั้ง");
   }
 

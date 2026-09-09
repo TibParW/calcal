@@ -14,7 +14,7 @@ import {
   Trash2,
   Clock,
 } from "lucide-react";
-import { getApiQuotaUsage } from "@/lib/storage";
+import { getApiQuotaUsage, clearApiCooldown } from "@/lib/storage";
 
 interface EditableFoodItem extends FoodAnalysisResult {
   isSelected: boolean;
@@ -245,6 +245,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
   const handleSaveCustomKey = () => {
     if (customApiKey.trim() && onSaveApiKey) {
+      clearApiCooldown();
+      setCooldownSec(0);
       onSaveApiKey(customApiKey.trim());
       setShowKeyInput(false);
       onRetry();
@@ -371,10 +373,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
 
           {/* Error Message */}
           {error && !isLoading && (() => {
+            const isDailyQuota =
+              error.includes("DAILY_QUOTA_EXCEEDED") ||
+              error.includes("โควตารายวัน") ||
+              error.includes("Daily Limit");
+
             const isKeyError =
               error.includes("MISSING_API_KEY") ||
               error.includes("API_KEY_INVALID") ||
-              error.includes("ไม่พบ Gemini API Key");
+              error.includes("ไม่พบ Gemini API Key") ||
+              isDailyQuota;
 
             const isQuotaError =
               error.includes("429") ||
@@ -387,12 +395,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                 <div className="flex items-start gap-2">
                   <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
                   <p className="font-semibold text-rose-500 leading-snug">
-                    {error.replace(/^(?:MISSING_API_KEY|API_KEY_INVALID):\s*/, "")}
+                    {error.replace(/^(?:MISSING_API_KEY|API_KEY_INVALID|DAILY_QUOTA_EXCEEDED):\s*/, "")}
                   </p>
                 </div>
 
-                {/* Live Cooldown Progress Bar when Rate-Limited */}
-                {(isQuotaError || cooldownSec > 0) && (
+                {/* Live Cooldown Progress Bar when Rate-Limited (Only if not daily quota) */}
+                {!isDailyQuota && (isQuotaError || cooldownSec > 0) && (
                   <div className="space-y-1.5 pt-2 border-t border-neutral-200 dark:border-neutral-800">
                     <div className="flex items-center justify-between text-[11px] text-amber-600 dark:text-amber-400 font-medium">
                       <span className="flex items-center gap-1.5">
@@ -416,7 +424,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                   </div>
                 )}
 
-                {(isKeyError || showKeyInput) && (
+                {(isKeyError || isQuotaError || showKeyInput) && (
                   <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
                     {hasSavedApiKey && !showKeyInput ? (
                       <div className="space-y-1.5">

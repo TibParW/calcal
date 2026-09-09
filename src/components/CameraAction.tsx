@@ -103,7 +103,11 @@ export const CameraAction: React.FC<CameraActionProps> = ({
       <button
         type="button"
         onClick={onOpenSettings}
-        title={lang === "en" ? "AI Quota: Click for settings" : "โควตาสแกน AI: แตะเพื่อดูการตั้งค่า"}
+        title={
+          lang === "en"
+            ? `AI Quota: ${quota.requestsThisMinute}/15 used (${rpmRemaining} remaining)`
+            : `โควตาสแกน AI: ใช้ไป ${quota.requestsThisMinute}/15 ครั้ง (เหลือ ${rpmRemaining} ครั้ง)`
+        }
         className="w-full flex items-center justify-between px-1 py-0.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 transition cursor-pointer select-none group"
       >
         <div className="flex items-center gap-1.5">
@@ -115,7 +119,7 @@ export const CameraAction: React.FC<CameraActionProps> = ({
           <span className="text-[11px] font-medium tracking-tight">
             {inCooldown
               ? (lang === "en" ? `Resetting in ${cooldownSec}s` : `รีเซ็ตใน ${cooldownSec} วิ`)
-              : (lang === "en" ? "AI Quota" : "โควตา AI")}
+              : (lang === "en" ? `AI Quota (used ${quota.requestsThisMinute}/15)` : `โควตา AI (ใช้ ${quota.requestsThisMinute}/15)`)}
           </span>
         </div>
 
@@ -129,12 +133,12 @@ export const CameraAction: React.FC<CameraActionProps> = ({
               style={{
                 width: inCooldown
                   ? `${Math.max(6, Math.min(100, (cooldownSec / 60) * 100))}%`
-                  : `${Math.max(6, Math.min(100, (rpmRemaining / 15) * 100))}%`,
+                  : `${Math.min(100, (quota.requestsThisMinute / 15) * 100)}%`,
               }}
             />
           </div>
           <span className="font-mono text-[10px] font-medium text-neutral-500 dark:text-neutral-400 min-w-[32px] text-right">
-            {inCooldown ? `${cooldownSec}s` : `${rpmRemaining}/15`}
+            {inCooldown ? `${cooldownSec}s` : `${quota.requestsThisMinute}/15`}
           </span>
         </div>
       </button>

@@ -38,11 +38,13 @@ export async function POST(request: NextRequest) {
       errorMessage.includes("GoogleGenerativeAI Error") ||
       errorMessage.includes("generativelanguage.googleapis.com")
     ) {
-      if (errorMessage.includes("404") || errorMessage.includes("not found")) {
+      if (errorMessage.includes("DAILY_QUOTA_EXCEEDED") || errorMessage.includes("รายวัน") || errorMessage.includes("per day")) {
+        errorMessage = "DAILY_QUOTA_EXCEEDED: โควตารายวัน (Daily Limit) ของ Google AI ครบกำหนดแล้วสำหรับวันนี้ กรุณาเปลี่ยน Gemini API Key ใหม่ในหน้าต่างนี้ (สร้างฟรีได้ทันทีใน Google AI Studio) เพื่อใช้งานต่อได้ทันทีครับ";
+      } else if (errorMessage.includes("404") || errorMessage.includes("not found")) {
         errorMessage = "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่มลองใหม่อีกครั้ง";
       } else if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("โควตา")) {
         if (userApiKey) {
-          errorMessage = "โควตาการเรียกใช้งานของ Google AI เต็มชั่วคราว (Google จำกัดจำนวนครั้งต่อนาทีบน Free Tier) กรุณารอประมาณ 1 นาทีแล้วกด 'ลองใหม่อีกครั้ง' ครับ";
+          errorMessage = "โควตาการเรียกใช้งานของ Google AI เต็มชั่วคราว (Google จำกัด 15 ครั้งต่อนาทีบน Free Tier) กรุณารอประมาณ 1 นาทีแล้วกด 'ลองใหม่อีกครั้ง' หรือเปลี่ยน API Key ใหม่ในหน้าต่างนี้ครับ";
         } else {
           errorMessage = "โควตาส่วนกลางเต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า";
         }
@@ -64,7 +66,8 @@ export async function POST(request: NextRequest) {
 
     const isKeyError =
       errorMessage.includes("MISSING_API_KEY") ||
-      errorMessage.includes("API_KEY_INVALID");
+      errorMessage.includes("API_KEY_INVALID") ||
+      errorMessage.includes("DAILY_QUOTA_EXCEEDED");
 
     return NextResponse.json(
       { error: errorMessage },

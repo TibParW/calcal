@@ -174,7 +174,8 @@ export default function HomePage() {
       }
 
       if (!response.ok) {
-        if (response.status === 429 || data?.error?.includes("429") || data?.error?.includes("โควตา")) {
+        const isDaily = data?.error?.includes("DAILY_QUOTA_EXCEEDED") || data?.error?.includes("รายวัน");
+        if (!isDaily && (response.status === 429 || data?.error?.includes("429") || data?.error?.includes("โควตา"))) {
           recordApiCooldown(60);
         }
         throw new Error(data?.error || (lang === "en" ? "Error analyzing food image" : "เกิดข้อผิดพลาดในการวิเคราะห์อาหาร"));
@@ -183,7 +184,8 @@ export default function HomePage() {
       setAnalysisResponse(data);
     } catch (err: any) {
       console.error("Analysis failed:", err);
-      if (err?.message?.includes("429") || err?.message?.includes("RESOURCE_EXHAUSTED") || err?.message?.includes("โควตา")) {
+      const isDaily = err?.message?.includes("DAILY_QUOTA_EXCEEDED") || err?.message?.includes("รายวัน");
+      if (!isDaily && (err?.message?.includes("429") || err?.message?.includes("RESOURCE_EXHAUSTED") || err?.message?.includes("โควตา"))) {
         recordApiCooldown(60);
       }
       setAnalysisError(err.message || (lang === "en" ? "Cannot connect to AI service. Please try again." : "ไม่สามารถติดต่อระบบ AI ได้ กรุณาลองใหม่อีกครั้ง"));
