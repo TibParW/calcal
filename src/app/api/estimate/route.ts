@@ -61,10 +61,12 @@ export async function POST(request: NextRequest) {
 
     // Priority ultra-fast models in Google Generative AI
     const fastModels = [
+      "gemini-2.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-flash-latest",
+      "gemini-3.5-flash-lite",
       "gemini-2.0-flash",
       "gemini-1.5-flash",
-      "gemini-2.5-flash",
-      "gemini-2.0-flash-lite",
     ];
 
     let lastError: any = null;
