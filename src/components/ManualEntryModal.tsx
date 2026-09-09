@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { X, Sparkles, Loader2 } from "lucide-react";
 import { Macronutrients } from "@/types";
 import { getLocalTimeString, getUserSettings, recordApiScanAttempt, recordApiCooldown } from "@/lib/storage";
@@ -8,6 +8,7 @@ import { useLanguage } from "@/context/LanguageContext";
 interface ManualEntryModalProps {
   isOpen: boolean;
   onClose: () => void;
+  initialFoodName?: string;
   onSave: (entry: {
     food_name: string;
     calories: number;
@@ -19,10 +20,11 @@ interface ManualEntryModalProps {
 export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
   isOpen,
   onClose,
+  initialFoodName,
   onSave,
 }) => {
   const { t, lang } = useLanguage();
-  const [foodName, setFoodName] = useState("");
+  const [foodName, setFoodName] = useState(initialFoodName || "");
   const [calories, setCalories] = useState<number | "">("");
   const [protein, setProtein] = useState<number | "">("");
   const [carbs, setCarbs] = useState<number | "">("");
@@ -31,6 +33,12 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
   const [isEstimating, setIsEstimating] = useState(false);
   const [estimateHint, setEstimateHint] = useState<string | null>(null);
   const [estimateError, setEstimateError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (isOpen && initialFoodName) {
+      setFoodName(initialFoodName);
+    }
+  }, [isOpen, initialFoodName]);
 
   if (!isOpen) return null;
 

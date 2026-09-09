@@ -51,6 +51,7 @@ interface AnalysisModalProps {
   onRetry: () => void;
   onReAnalyzeWithNote?: (note: string) => void;
   onSaveApiKey?: (apiKey: string) => void;
+  onOpenManualEntry?: (foodName?: string) => void;
 }
 
 import { useLanguage } from "@/context/LanguageContext";
@@ -88,6 +89,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
   onRetry,
   onReAnalyzeWithNote,
   onSaveApiKey,
+  onOpenManualEntry,
 }) => {
   const { lang, t } = useLanguage();
   const [items, setItems] = useState<EditableFoodItem[]>([]);
@@ -397,6 +399,76 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                   <p className="font-semibold text-rose-500 leading-snug">
                     {error.replace(/^(?:MISSING_API_KEY|API_KEY_INVALID|DAILY_QUOTA_EXCEEDED):\s*/, "")}
                   </p>
+                </div>
+
+                {/* Food Name / Dish Hint Helper when Analysis Fails or Times out */}
+                <div className="p-3 bg-emerald-50/80 dark:bg-emerald-950/40 rounded-2xl border border-emerald-200/80 dark:border-emerald-800/60 space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[11px] font-bold text-emerald-800 dark:text-emerald-300 flex items-center gap-1.5">
+                      <Sparkles className="w-3.5 h-3.5 text-emerald-600 dark:text-emerald-400" />
+                      {lang === "en" ? "Help AI recognize this meal" : "ระบุชื่อเมนูอาหารเพื่อช่วย AI"}
+                    </span>
+                    <span className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                      {lang === "en" ? "Fast & accurate ⚡" : "คิดเร็วขึ้น & ไม่หมดเวลา ⚡"}
+                    </span>
+                  </div>
+
+                  <p className="text-[10.5px] text-neutral-600 dark:text-neutral-400 leading-normal">
+                    {lang === "en"
+                      ? "If AI took too long or was unsure, type what dish is in the photo:"
+                      : "หากภาพวิเคราะห์ช้าหรือเมนูซับซ้อน พิมพ์ชื่ออาหารในภาพแล้วกดสแกนใหม่ AI จะคำนวณแคลอรีจากชื่อนี้ทันที:"}
+                  </p>
+
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      value={userNote}
+                      onChange={(e) => setUserNote(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" && userNote.trim()) {
+                          e.preventDefault();
+                          if (onReAnalyzeWithNote) {
+                            onReAnalyzeWithNote(userNote.trim());
+                          } else {
+                            onRetry();
+                          }
+                        }
+                      }}
+                      placeholder={
+                        lang === "en"
+                          ? "e.g. Mille-feuille, Crispy pancake, Basil pork..."
+                          : "เช่น มิลเฟย, ขนมเบื้อง, กะเพราหมู..."
+                      }
+                      className="flex-1 text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#18181c] border border-emerald-300/80 dark:border-emerald-700/80 text-neutral-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-emerald-500/20"
+                    />
+                    <button
+                      type="button"
+                      disabled={!userNote.trim()}
+                      onClick={() => {
+                        if (userNote.trim() && onReAnalyzeWithNote) {
+                          onReAnalyzeWithNote(userNote.trim());
+                        } else {
+                          onRetry();
+                        }
+                      }}
+                      className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-semibold shrink-0 transition active:scale-95 disabled:opacity-40 shadow-sm flex items-center gap-1"
+                    >
+                      <Sparkles className="w-3 h-3" />
+                      <span>{lang === "en" ? "Analyze" : "วิเคราะห์ใหม่"}</span>
+                    </button>
+                  </div>
+
+                  {onOpenManualEntry && (
+                    <div className="pt-1 flex justify-end">
+                      <button
+                        type="button"
+                        onClick={() => onOpenManualEntry(userNote.trim())}
+                        className="text-[10.5px] font-semibold text-neutral-500 dark:text-neutral-400 hover:text-neutral-800 dark:hover:text-white underline flex items-center gap-0.5 transition"
+                      >
+                        <span>{lang === "en" ? "Or switch to manual entry →" : "หรือเปลี่ยนไปบันทึกข้อมูลเอง (แมนนวล) →"}</span>
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Live Cooldown Progress Bar when Rate-Limited (Only if not daily quota) */}

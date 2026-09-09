@@ -50,6 +50,7 @@ export default function HomePage() {
   // Modal states
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
   const [isManualModalOpen, setIsManualModalOpen] = useState(false);
+  const [manualInitialFoodName, setManualInitialFoodName] = useState<string>("");
   const [isSettingsModalOpen, setIsSettingsModalOpen] = useState(false);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState(false);
   const [isTdeeModalOpen, setIsTdeeModalOpen] = useState(false);
@@ -359,13 +360,26 @@ export default function HomePage() {
           const updated = saveUserSettings({ gemini_api_key: key.trim() });
           setSettings(updated);
         }}
+        onOpenManualEntry={(foodName) => {
+          setIsAnalysisModalOpen(false);
+          setManualInitialFoodName(foodName || "");
+          setIsManualModalOpen(true);
+        }}
       />
 
       {/* Manual Entry Modal */}
       <ManualEntryModal
         isOpen={isManualModalOpen}
-        onClose={() => setIsManualModalOpen(false)}
-        onSave={handleSaveManualEntry}
+        initialFoodName={manualInitialFoodName}
+        onClose={() => {
+          setManualInitialFoodName("");
+          setIsManualModalOpen(false);
+        }}
+        onSave={(entry) => {
+          handleSaveManualEntry(entry);
+          setManualInitialFoodName("");
+          setIsManualModalOpen(false);
+        }}
       />
 
       {/* Settings Modal */}
