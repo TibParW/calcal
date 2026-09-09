@@ -4,8 +4,8 @@
   "description": "ถ่ายรูปอาหารแล้วประเมินแคลอรีทันทีด้วย AI บันทึกยอดอัตโนมัติประจำวัน",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#090d16",
-  "theme_color": "#16a34a",
+  "background_color": "#fafaf9",
+  "theme_color": "#fafaf9",
   "icons": [
     {
       "src": "/icon.svg",

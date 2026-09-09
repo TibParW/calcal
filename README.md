@@ -60,14 +60,14 @@ git init
 git add .
 git commit -m "Initial commit of calCal"
 git branch -M main
-git remote add origin https://github.com/USERNAME/calcal.git
+git remote add origin https://github.com/TibParW/calcal.git
 git push -u origin main
 ```
 
 ### ขั้นตอนที่ 2: เชื่อมต่อและ Deploy บน Vercel
 1. เข้าไปที่ [Vercel.com](https://vercel.com/) แล้วล็อกอินด้วยบัญชี GitHub
 2. คลิกปุ่ม **"Add New..."** → เลือก **"Project"**
-3. เลือก Repository `calcal` ที่เพิ่ง Push ขึ้นไป แล้วกด **Import**
+3. เลือก Repository `TibParW/calcal` แล้วกด **Import**
 4. ในส่วน **Environment Variables**:
    - **Key**: `GEMINI_API_KEY`
    - **Value**: วาง API Key ของคุณที่ได้จาก Google AI Studio

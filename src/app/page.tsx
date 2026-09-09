@@ -273,7 +273,7 @@ export default function HomePage() {
 
       {/* Minimal Footer */}
       <footer className="w-full max-w-sm sm:max-w-md mx-auto px-4 py-6 text-center text-[11px] text-neutral-400">
-        <p>calcal • จำในเครื่อง ตัดรอบ 00:00 น.</p>
+        <p>calCal • จำในเครื่อง ตัดรอบ 00:00 น.</p>
       </footer>
 
       {/* AI Analysis Modal */}

@@ -83,7 +83,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `calcal_logs_${getLocalDateString()}.csv`;
+    a.download = `calCal_logs_${getLocalDateString()}.csv`;
     a.click();
     URL.revokeObjectURL(url);
   };
@@ -94,7 +94,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `calcal_backup_${getLocalDateString()}.json`;
+    a.download = `calCal_backup_${getLocalDateString()}.json`;
     a.click();
     URL.revokeObjectURL(url);
   };

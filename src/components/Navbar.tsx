@@ -13,7 +13,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
         {/* Brand */}
         <div className="flex items-center gap-2">
           <span className="font-semibold text-lg tracking-tight text-neutral-900 dark:text-neutral-100">
-            calcal
+            calCal
           </span>
           <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
         </div>
