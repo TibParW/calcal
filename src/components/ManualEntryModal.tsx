@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { X, Sparkles, Loader2 } from "lucide-react";
 import { Macronutrients } from "@/types";
-import { getLocalTimeString, getUserSettings, recordApiScanAttempt } from "@/lib/storage";
+import { getLocalTimeString, getUserSettings, recordApiScanAttempt, recordApiCooldown } from "@/lib/storage";
 import { estimateNutritionFromText } from "@/lib/gemini";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -21,7 +21,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
   onClose,
   onSave,
 }) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const [foodName, setFoodName] = useState("");
   const [calories, setCalories] = useState<number | "">("");
   const [protein, setProtein] = useState<number | "">("");
@@ -47,7 +47,6 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
       const apiKey = settings.gemini_api_key?.trim();
 
       const result = await estimateNutritionFromText(trimmed, apiKey);
-      recordApiScanAttempt();
 
       // Auto-fill values
       setCalories(result.calories);
@@ -55,13 +54,32 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
       setCarbs(result.macronutrients.carbs_g);
       setFat(result.macronutrients.fat_g);
 
-      if (result.portion_description) {
+      if (result.source === "ai") {
+        // Deduct from API quota and get updated remaining count
+        const updatedQuota = recordApiScanAttempt();
+        const rpmLeft = Math.max(0, updatedQuota.rpmLimit - updatedQuota.requestsThisMinute);
         setEstimateHint(
-          t("manual_portion_hint").replace("{portion}", result.portion_description)
+          lang === "en"
+            ? `✨ AI Estimated: ${result.portion_description} (AI Quota left: ${rpmLeft}/15)`
+            : `✨ คำนวณด้วย AI: ${result.portion_description} (โควตานาทีนี้เหลือ ${rpmLeft}/15 ครั้ง)`
+        );
+      } else {
+        // Instant offline match (0 API quota used)
+        setEstimateHint(
+          lang === "en"
+            ? `✨ Instant Offline: ${result.portion_description} (0 AI Quota used)`
+            : `✨ ข้อมูลด่วนในเครื่อง: ${result.portion_description} (ไม่เปลืองโควตา AI)`
         );
       }
     } catch (err: any) {
       console.warn("Manual estimate failed:", err);
+      const isRateLimit =
+        err.message?.includes("429") ||
+        err.message?.includes("QUOTA") ||
+        err.message?.includes("exhausted");
+      if (isRateLimit) {
+        recordApiCooldown(60);
+      }
       setEstimateError(
         err.message?.replace(/^MISSING_API_KEY:\s*/, "") || "ไม่สามารถคำนวณได้ กรุณากรอกด้วยตนเอง"
       );

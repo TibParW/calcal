@@ -417,6 +417,7 @@ export interface TextNutritionEstimate {
     fat_g: number;
   };
   portion_description: string;
+  source: "offline" | "ai";
 }
 
 // Built-in offline quick-reference dictionary for instant offline response
@@ -427,6 +428,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 105,
     macronutrients: { protein_g: 1.3, carbs_g: 27, fat_g: 0.3 },
     portion_description: "1 ผลกลาง (~118g)",
+    source: "offline",
   },
   "กล้วยหอม": {
     food_name: "กล้วยหอม",
@@ -434,6 +436,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 120,
     macronutrients: { protein_g: 1.5, carbs_g: 31, fat_g: 0.4 },
     portion_description: "1 ผลใหญ่ (~135g)",
+    source: "offline",
   },
   "กล้วยน้ำว้า": {
     food_name: "กล้วยน้ำว้า",
@@ -441,6 +444,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 60,
     macronutrients: { protein_g: 0.8, carbs_g: 15, fat_g: 0.2 },
     portion_description: "1 ผล (~50g)",
+    source: "offline",
   },
   "ไข่ต้ม": {
     food_name: "ไข่ต้ม",
@@ -448,6 +452,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 75,
     macronutrients: { protein_g: 6.3, carbs_g: 0.6, fat_g: 5.3 },
     portion_description: "1 ฟอง (~50g)",
+    source: "offline",
   },
   "ไข่ต้ม 2 ฟอง": {
     food_name: "ไข่ต้ม 2 ฟอง",
@@ -455,6 +460,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 150,
     macronutrients: { protein_g: 12.6, carbs_g: 1.2, fat_g: 10.6 },
     portion_description: "2 ฟอง (~100g)",
+    source: "offline",
   },
   "ไข่ดาว": {
     food_name: "ไข่ดาว",
@@ -462,6 +468,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 120,
     macronutrients: { protein_g: 6.3, carbs_g: 0.5, fat_g: 10.5 },
     portion_description: "1 ฟอง ทอดน้ำมัน",
+    source: "offline",
   },
   "ข้าวสวย": {
     food_name: "ข้าวสวย",
@@ -469,6 +476,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 150,
     macronutrients: { protein_g: 3, carbs_g: 33, fat_g: 0.5 },
     portion_description: "1 ทัพพี (~100g)",
+    source: "offline",
   },
   "ข้าวกล้อง": {
     food_name: "ข้าวกล้อง",
@@ -476,6 +484,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 140,
     macronutrients: { protein_g: 3.2, carbs_g: 30, fat_g: 1.2 },
     portion_description: "1 ทัพพี (~100g)",
+    source: "offline",
   },
   "อกไก่": {
     food_name: "อกไก่ต้ม",
@@ -483,6 +492,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 165,
     macronutrients: { protein_g: 31, carbs_g: 0, fat_g: 3.6 },
     portion_description: "อกไก่สุก 100g",
+    source: "offline",
   },
   "อกไก่ย่าง": {
     food_name: "อกไก่ย่าง",
@@ -490,6 +500,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 180,
     macronutrients: { protein_g: 30, carbs_g: 1, fat_g: 5 },
     portion_description: "อกไก่ย่าง 1 ชิ้น (~120g)",
+    source: "offline",
   },
   "แอปเปิ้ล": {
     food_name: "แอปเปิ้ล",
@@ -497,6 +508,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 80,
     macronutrients: { protein_g: 0.5, carbs_g: 21, fat_g: 0.3 },
     portion_description: "1 ผลกลาง (~150g)",
+    source: "offline",
   },
   "กาแฟดำ": {
     food_name: "กาแฟดำ / อเมริกาโน่ไม่หวาน",
@@ -504,6 +516,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 5,
     macronutrients: { protein_g: 0.3, carbs_g: 0.5, fat_g: 0 },
     portion_description: "1 แก้ว (ไม่ใส่น้ำตาล/นม)",
+    source: "offline",
   },
   "อเมริกาโน่เย็น": {
     food_name: "อเมริกาโน่เย็นไม่หวาน",
@@ -511,6 +524,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 5,
     macronutrients: { protein_g: 0.3, carbs_g: 0.5, fat_g: 0 },
     portion_description: "1 แก้ว (16 oz)",
+    source: "offline",
   },
   "ข้าวกะเพราไก่": {
     food_name: "ข้าวกะเพราไก่",
@@ -518,6 +532,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 550,
     macronutrients: { protein_g: 26, carbs_g: 65, fat_g: 20 },
     portion_description: "1 จานธรรมดา",
+    source: "offline",
   },
   "ข้าวมันไก่": {
     food_name: "ข้าวมันไก่",
@@ -525,6 +540,7 @@ const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
     calories: 580,
     macronutrients: { protein_g: 24, carbs_g: 68, fat_g: 23 },
     portion_description: "1 จานธรรมดา",
+    source: "offline",
   },
 };
 
@@ -571,6 +587,7 @@ function tryOfflineNutritionWithQuantity(rawQuery: string): TextNutritionEstimat
                 fat_g: Number((val.macronutrients.fat_g * qty).toFixed(1)),
               },
               portion_description: `${qty} ${unit}`,
+              source: "offline",
             };
           }
         }
@@ -715,6 +732,7 @@ export async function estimateNutritionFromText(
           fat_g: Math.max(0, Number(f.toFixed(1))),
         },
         portion_description: parsed.portion_description || "ขนาด 1 ที่ปกติ",
+        source: "ai",
       };
     } catch (err: any) {
       clearTimeout(timeoutId);
