@@ -277,6 +277,7 @@ export default function HomePage() {
         <CameraAction
           onImageSelected={(file, mode) => processImageAnalysis(file, mode)}
           onOpenManualEntry={() => setIsManualModalOpen(true)}
+          onOpenSettings={() => setIsSettingsModalOpen(true)}
           disabled={isAnalyzing}
         />
 

@@ -1,23 +1,57 @@
-import React, { useRef, useState } from "react";
-import { Camera, FileText, Image as ImageIcon, Plus } from "lucide-react";
+import React, { useRef, useState, useEffect } from "react";
+import { Camera, FileText, Image as ImageIcon, Plus, Zap } from "lucide-react";
 import { useLanguage } from "@/context/LanguageContext";
+import { getApiQuotaUsage } from "@/lib/storage";
+import { ApiQuotaUsage } from "@/types";
 
 interface CameraActionProps {
   onImageSelected: (file: File, scanMode: "food" | "nutrition_label") => void;
   onOpenManualEntry: () => void;
+  onOpenSettings?: () => void;
   disabled?: boolean;
 }
 
 export const CameraAction: React.FC<CameraActionProps> = ({
   onImageSelected,
   onOpenManualEntry,
+  onOpenSettings,
   disabled = false,
 }) => {
-  const { t } = useLanguage();
+  const { t, lang } = useLanguage();
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const labelCameraInputRef = useRef<HTMLInputElement>(null);
   const galleryInputRef = useRef<HTMLInputElement>(null);
   const [pendingScanMode, setPendingScanMode] = useState<"food" | "nutrition_label">("food");
+
+  const [quota, setQuota] = useState<ApiQuotaUsage>({
+    requestsThisMinute: 0,
+    rpmLimit: 15,
+    requestsToday: 0,
+    rpdLimit: 1500,
+    cooldownUntil: null,
+  });
+  const [cooldownSec, setCooldownSec] = useState<number>(0);
+
+  useEffect(() => {
+    const checkQuota = () => {
+      const q = getApiQuotaUsage();
+      setQuota(q);
+      if (q.cooldownUntil && q.cooldownUntil > Date.now()) {
+        setCooldownSec(Math.max(0, Math.ceil((q.cooldownUntil - Date.now()) / 1000)));
+      } else {
+        setCooldownSec(0);
+      }
+    };
+
+    checkQuota();
+    const interval = setInterval(checkQuota, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const rpmRemaining = Math.max(0, quota.rpmLimit - quota.requestsThisMinute);
+  const isHighRpm = quota.requestsThisMinute >= 12;
+  const isMaxRpm = quota.requestsThisMinute >= quota.rpmLimit;
+  const inCooldown = cooldownSec > 0;
 
   const handleFileChange = (
     e: React.ChangeEvent<HTMLInputElement>,
@@ -64,6 +98,52 @@ export const CameraAction: React.FC<CameraActionProps> = ({
         onChange={(e) => handleFileChange(e, pendingScanMode)}
         disabled={disabled}
       />
+
+      {/* Live AI Quota Progress Bar */}
+      <div
+        onClick={onOpenSettings}
+        role="button"
+        tabIndex={0}
+        title={lang === "en" ? "Click to view full API Quota in Settings" : "แตะเพื่อดูรายละเอียดโควตาในหน้าตั้งค่า"}
+        className="p-2.5 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 transition hover:border-neutral-300 dark:hover:border-neutral-700 active:scale-[0.99] space-y-1.5 cursor-pointer shadow-xs"
+      >
+        <div className="flex items-center justify-between text-[11px]">
+          <div className="flex items-center gap-1.5">
+            <Zap className={`w-3.5 h-3.5 ${inCooldown ? "text-rose-500 animate-spin" : isHighRpm ? "text-amber-500" : "text-emerald-500"}`} />
+            <span className="font-semibold text-neutral-800 dark:text-neutral-200">
+              {inCooldown
+                ? (lang === "en" ? `Quota resetting in ${cooldownSec}s...` : `รีเซ็ตโควตาใน ${cooldownSec} วินาที...`)
+                : (lang === "en" ? "AI Scans Remaining" : "โควตาสแกน AI")}
+            </span>
+          </div>
+
+          <span className="font-mono font-bold text-xs text-neutral-900 dark:text-neutral-100">
+            {inCooldown
+              ? `${cooldownSec}s`
+              : `${rpmRemaining}/15 ${lang === "en" ? "left" : "ครั้ง"}`}
+          </span>
+        </div>
+
+        {/* Progress Track */}
+        <div className="w-full h-1.5 rounded-full bg-neutral-100 dark:bg-neutral-800 overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all duration-500 ${
+              inCooldown ? "bg-rose-500" : isHighRpm ? "bg-amber-500" : "bg-emerald-500"
+            }`}
+            style={{
+              width: inCooldown
+                ? `${Math.max(4, Math.min(100, (cooldownSec / 60) * 100))}%`
+                : `${Math.max(4, Math.min(100, (rpmRemaining / 15) * 100))}%`,
+            }}
+          />
+        </div>
+
+        {/* Sub-label */}
+        <div className="flex items-center justify-between text-[10px] text-neutral-400 dark:text-neutral-500">
+          <span>{lang === "en" ? "15 req/min limit" : "ความถี่ 15 ครั้ง/นาที"}</span>
+          <span>{lang === "en" ? `Today: ${quota.requestsToday} scans` : `วันนี้สแกนไป: ${quota.requestsToday} ครั้ง`}</span>
+        </div>
+      </div>
 
       {/* Primary Scan Buttons (Food & Nutrition Label) */}
       <div className="grid grid-cols-2 gap-2">
