@@ -71,23 +71,74 @@ export function shiftDate(dateStr: string, daysOffset: number): string {
   return getLocalDateString(date);
 }
 
-export function getFoodLogs(): FoodLogItem[] {
-  if (typeof window === "undefined") return [];
+/**
+ * Safe wrapper for localStorage.getItem to handle SSR and iOS Safari Private Browsing
+ */
+export function safeGetItem(key: string): string | null {
+  if (typeof window === "undefined") return null;
   try {
-    const raw = localStorage.getItem(LOGS_STORAGE_KEY);
+    return localStorage.getItem(key);
+  } catch (e) {
+    console.warn(`[storage] Failed to get item for key "${key}":`, e);
+    return null;
+  }
+}
+
+/**
+ * Safe wrapper for localStorage.setItem to handle QuotaExceededError and iOS Safari Private Mode
+ */
+export function safeSetItem(key: string, value: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    localStorage.setItem(key, value);
+    return true;
+  } catch (e: any) {
+    console.warn(`[storage] Storage quota exceeded or private mode active for key "${key}":`, e);
+    // If quota is exceeded when saving logs, try auto-pruning thumbnails to recover space
+    if (key === LOGS_STORAGE_KEY) {
+      try {
+        console.info("[storage] Attempting auto-recovery by stripping old thumbnails...");
+        stripOldThumbnails(7);
+        localStorage.setItem(key, value);
+        return true;
+      } catch (innerErr) {
+        console.warn("[storage] Recovery by stripping thumbnails failed:", innerErr);
+      }
+    }
+    return false;
+  }
+}
+
+/**
+ * Safe wrapper for localStorage.removeItem
+ */
+export function safeRemoveItem(key: string): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (e) {
+    console.warn(`[storage] Failed to remove item for key "${key}":`, e);
+    return false;
+  }
+}
+
+export function getFoodLogs(): FoodLogItem[] {
+  try {
+    const raw = safeGetItem(LOGS_STORAGE_KEY);
     return raw ? JSON.parse(raw) : [];
   } catch (err) {
-    console.error("Failed to load food logs from localStorage", err);
+    console.error("Failed to load food logs from storage", err);
     return [];
   }
 }
 
-export function saveFoodLogs(logs: FoodLogItem[]): void {
-  if (typeof window === "undefined") return;
+export function saveFoodLogs(logs: FoodLogItem[]): boolean {
   try {
-    localStorage.setItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
+    return safeSetItem(LOGS_STORAGE_KEY, JSON.stringify(logs));
   } catch (err) {
-    console.error("Failed to save food logs to localStorage", err);
+    console.error("Failed to save food logs to storage", err);
+    return false;
   }
 }
 
@@ -143,9 +194,8 @@ export function deleteFoodLog(id: string): void {
 }
 
 export function getUserSettings(): UserSettings {
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
-    const raw = localStorage.getItem(SETTINGS_STORAGE_KEY);
+    const raw = safeGetItem(SETTINGS_STORAGE_KEY);
     if (!raw) return DEFAULT_SETTINGS;
     return { ...DEFAULT_SETTINGS, ...JSON.parse(raw) };
   } catch (err) {
@@ -155,11 +205,10 @@ export function getUserSettings(): UserSettings {
 }
 
 export function saveUserSettings(settings: Partial<UserSettings>): UserSettings {
-  if (typeof window === "undefined") return DEFAULT_SETTINGS;
   try {
     const current = getUserSettings();
     const updated = { ...current, ...settings };
-    localStorage.setItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+    safeSetItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
     return updated;
   } catch (err) {
     console.error("Failed to save user settings", err);
@@ -168,8 +217,7 @@ export function saveUserSettings(settings: Partial<UserSettings>): UserSettings 
 }
 
 export function clearAllData(): void {
-  if (typeof window === "undefined") return;
-  localStorage.removeItem(LOGS_STORAGE_KEY);
+  safeRemoveItem(LOGS_STORAGE_KEY);
 }
 
 export function exportDataAsJson(): string {

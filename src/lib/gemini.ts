@@ -142,20 +142,45 @@ export async function analyzeFoodImage(
     const response = await result.response;
     const text = response.text();
 
-    if (!text) {
-      throw new Error("AI ไม่ได้ส่งผลลัพธ์กลับมา กรุณาลองใหม่อีกครั้ง");
+    // Clean potential markdown wrap if any (e.g. ```json ... ```)
+    let cleanJson = text.trim();
+    if (cleanJson.startsWith("```")) {
+      cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?\s*```$/, "").trim();
     }
 
-    const parsed = JSON.parse(text);
+    let parsed: any;
+    try {
+      parsed = JSON.parse(cleanJson);
+    } catch (parseErr) {
+      console.error("Failed to parse Gemini JSON:", text, parseErr);
+      throw new Error(
+        "ไม่สามารถระบุอาหารในภาพได้ชัดเจน กรุณาลองถ่ายใหม่อีกครั้ง หรือบันทึกด้วยตนเอง"
+      );
+    }
 
-    // Normalize output: handle array foods or single food fallback
+    // Normalize output: handle array foods, dishes, or single food fallback
     let rawFoodsList: any[] = [];
     if (Array.isArray(parsed.foods) && parsed.foods.length > 0) {
       rawFoodsList = parsed.foods;
-    } else if (parsed.food_name) {
+    } else if (Array.isArray(parsed.dishes) && parsed.dishes.length > 0) {
+      rawFoodsList = parsed.dishes;
+    } else if (parsed.food_name && typeof parsed.food_name === "string" && parsed.food_name.trim().length > 0) {
       rawFoodsList = [parsed];
     } else {
-      throw new Error("ไม่สามารถระบุรายการอาหารในรูปภาพได้ กรุณาลองถ่ายใหม่อีกครั้ง");
+      throw new Error(
+        "ไม่สามารถระบุอาหารในภาพได้ชัดเจน กรุณาลองถ่ายใหม่อีกครั้ง หรือบันทึกด้วยตนเอง"
+      );
+    }
+
+    // Filter out empty or unidentifiable items
+    rawFoodsList = rawFoodsList.filter(
+      (item) => item && (item.food_name || item.food_name_en)
+    );
+
+    if (rawFoodsList.length === 0) {
+      throw new Error(
+        "ไม่สามารถระบุอาหารในภาพได้ชัดเจน กรุณาลองถ่ายใหม่อีกครั้ง หรือบันทึกด้วยตนเอง"
+      );
     }
 
     const normalizedFoods: FoodAnalysisResult[] = rawFoodsList.map((item, idx) => {

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { analyzeFoodImage } from "@/lib/gemini";
 
 export const maxDuration = 30; // 30 seconds max duration for Vercel functions
+export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
   try {
