@@ -32,7 +32,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   onDataReset,
   onOpenTdeeModal,
 }) => {
-  const { lang, t } = useLanguage();
+  const { lang, setLang, t } = useLanguage();
   const { theme, setTheme } = useTheme();
   const [dailyGoal, setDailyGoal] = useState(settings.daily_goal || 2000);
   const [proteinGoal, setProteinGoal] = useState(settings.protein_goal_g || 100);
@@ -181,6 +181,37 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                   className="w-full px-2 py-1.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-center font-medium text-neutral-800 dark:text-neutral-200 focus:outline-none"
                 />
               </div>
+            </div>
+          </div>
+
+          {/* Language Selector (Direct Press, No Slider) */}
+          <div className="space-y-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
+            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
+              {t("settings_lang_title")}
+            </span>
+            <div className="grid grid-cols-2 gap-2">
+              <button
+                type="button"
+                onClick={() => setLang("th")}
+                className={`p-2.5 rounded-2xl border flex items-center justify-center gap-1.5 transition active:scale-95 ${
+                  lang === "th"
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent shadow-xs font-semibold"
+                    : "bg-neutral-100/60 dark:bg-neutral-800/40 text-neutral-700 dark:text-neutral-300 border-neutral-200/50 dark:border-neutral-700/50"
+                }`}
+              >
+                <span className="text-xs font-medium">🇹🇭 ภาษาไทย (TH)</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setLang("en")}
+                className={`p-2.5 rounded-2xl border flex items-center justify-center gap-1.5 transition active:scale-95 ${
+                  lang === "en"
+                    ? "bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 border-transparent shadow-xs font-semibold"
+                    : "bg-neutral-100/60 dark:bg-neutral-800/40 text-neutral-700 dark:text-neutral-300 border-neutral-200/50 dark:border-neutral-700/50"
+                }`}
+              >
+                <span className="text-xs font-medium">🇬🇧 English (EN)</span>
+              </button>
             </div>
           </div>
 
