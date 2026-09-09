@@ -139,10 +139,32 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
         .map((m: any) => (m.name || "").replace(/^models\//, ""))
         .filter(Boolean);
 
-      const flashModels = validModels.filter((name: string) => name.includes("flash"));
+      const flashModels = validModels.filter(
+        (name: string) =>
+          name.includes("flash") &&
+          !name.includes("omni") &&
+          !name.includes("tts") &&
+          !name.includes("audio")
+      );
       const otherModels = validModels.filter((name: string) => !name.includes("flash"));
 
-      flashModels.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+      // Sort with priority for stable standard flash versions first
+      const priority = [
+        "gemini-3.6-flash",
+        "gemini-3.7-flash",
+        "gemini-3.5-flash",
+        "gemini-3.8-flash",
+        "gemini-flash-latest",
+        "gemini-2.5-flash-lite",
+      ];
+      flashModels.sort((a, b) => {
+        const idxA = priority.indexOf(a);
+        const idxB = priority.indexOf(b);
+        if (idxA !== -1 && idxB !== -1) return idxA - idxB;
+        if (idxA !== -1) return -1;
+        if (idxB !== -1) return 1;
+        return b.localeCompare(a, undefined, { numeric: true });
+      });
 
       const sorted = [...flashModels, ...otherModels];
       if (sorted.length > 0) {
@@ -384,3 +406,247 @@ export async function analyzeFoodImage(
     throw error;
   }
 }
+
+export interface TextNutritionEstimate {
+  food_name: string;
+  food_name_en?: string;
+  calories: number;
+  macronutrients: {
+    protein_g: number;
+    carbs_g: number;
+    fat_g: number;
+  };
+  portion_description: string;
+}
+
+// Built-in offline quick-reference dictionary for instant offline response
+const QUICK_OFFLINE_NUTRITION: Record<string, TextNutritionEstimate> = {
+  "กล้วย": {
+    food_name: "กล้วย",
+    food_name_en: "Banana",
+    calories: 105,
+    macronutrients: { protein_g: 1.3, carbs_g: 27, fat_g: 0.3 },
+    portion_description: "1 ผลกลาง (~118g)",
+  },
+  "กล้วยหอม": {
+    food_name: "กล้วยหอม",
+    food_name_en: "Cavendish Banana",
+    calories: 120,
+    macronutrients: { protein_g: 1.5, carbs_g: 31, fat_g: 0.4 },
+    portion_description: "1 ผลใหญ่ (~135g)",
+  },
+  "กล้วยน้ำว้า": {
+    food_name: "กล้วยน้ำว้า",
+    food_name_en: "Cultivated Banana",
+    calories: 60,
+    macronutrients: { protein_g: 0.8, carbs_g: 15, fat_g: 0.2 },
+    portion_description: "1 ผล (~50g)",
+  },
+  "ไข่ต้ม": {
+    food_name: "ไข่ต้ม",
+    food_name_en: "Boiled Egg",
+    calories: 75,
+    macronutrients: { protein_g: 6.3, carbs_g: 0.6, fat_g: 5.3 },
+    portion_description: "1 ฟอง (~50g)",
+  },
+  "ไข่ต้ม 2 ฟอง": {
+    food_name: "ไข่ต้ม 2 ฟอง",
+    food_name_en: "2 Boiled Eggs",
+    calories: 150,
+    macronutrients: { protein_g: 12.6, carbs_g: 1.2, fat_g: 10.6 },
+    portion_description: "2 ฟอง (~100g)",
+  },
+  "ไข่ดาว": {
+    food_name: "ไข่ดาว",
+    food_name_en: "Fried Egg",
+    calories: 120,
+    macronutrients: { protein_g: 6.3, carbs_g: 0.5, fat_g: 10.5 },
+    portion_description: "1 ฟอง ทอดน้ำมัน",
+  },
+  "ข้าวสวย": {
+    food_name: "ข้าวสวย",
+    food_name_en: "Steamed White Rice",
+    calories: 150,
+    macronutrients: { protein_g: 3, carbs_g: 33, fat_g: 0.5 },
+    portion_description: "1 ทัพพี (~100g)",
+  },
+  "ข้าวกล้อง": {
+    food_name: "ข้าวกล้อง",
+    food_name_en: "Brown Rice",
+    calories: 140,
+    macronutrients: { protein_g: 3.2, carbs_g: 30, fat_g: 1.2 },
+    portion_description: "1 ทัพพี (~100g)",
+  },
+  "อกไก่": {
+    food_name: "อกไก่ต้ม",
+    food_name_en: "Boiled Chicken Breast",
+    calories: 165,
+    macronutrients: { protein_g: 31, carbs_g: 0, fat_g: 3.6 },
+    portion_description: "อกไก่สุก 100g",
+  },
+  "อกไก่ย่าง": {
+    food_name: "อกไก่ย่าง",
+    food_name_en: "Grilled Chicken Breast",
+    calories: 180,
+    macronutrients: { protein_g: 30, carbs_g: 1, fat_g: 5 },
+    portion_description: "อกไก่ย่าง 1 ชิ้น (~120g)",
+  },
+  "แอปเปิ้ล": {
+    food_name: "แอปเปิ้ล",
+    food_name_en: "Apple",
+    calories: 80,
+    macronutrients: { protein_g: 0.5, carbs_g: 21, fat_g: 0.3 },
+    portion_description: "1 ผลกลาง (~150g)",
+  },
+  "กาแฟดำ": {
+    food_name: "กาแฟดำ / อเมริกาโน่ไม่หวาน",
+    food_name_en: "Black Coffee / Americano",
+    calories: 5,
+    macronutrients: { protein_g: 0.3, carbs_g: 0.5, fat_g: 0 },
+    portion_description: "1 แก้ว (ไม่ใส่น้ำตาล/นม)",
+  },
+  "อเมริกาโน่เย็น": {
+    food_name: "อเมริกาโน่เย็นไม่หวาน",
+    food_name_en: "Iced Americano (No Sugar)",
+    calories: 5,
+    macronutrients: { protein_g: 0.3, carbs_g: 0.5, fat_g: 0 },
+    portion_description: "1 แก้ว (16 oz)",
+  },
+  "ข้าวกะเพราไก่": {
+    food_name: "ข้าวกะเพราไก่",
+    food_name_en: "Basil Chicken with Rice",
+    calories: 550,
+    macronutrients: { protein_g: 26, carbs_g: 65, fat_g: 20 },
+    portion_description: "1 จานธรรมดา",
+  },
+  "ข้าวมันไก่": {
+    food_name: "ข้าวมันไก่",
+    food_name_en: "Hainanese Chicken Rice",
+    calories: 580,
+    macronutrients: { protein_g: 24, carbs_g: 68, fat_g: 23 },
+    portion_description: "1 จานธรรมดา",
+  },
+};
+
+/**
+ * Estimates calories and macronutrients from food name text using Gemini AI (with offline fallback).
+ */
+export async function estimateNutritionFromText(
+  foodText: string,
+  userApiKey?: string
+): Promise<TextNutritionEstimate> {
+  const query = foodText.trim();
+  if (!query) {
+    throw new Error("กรุณาระบุชื่ออาหาร");
+  }
+
+  // Check direct offline match first for ultra-fast response
+  const lowerQuery = query.toLowerCase();
+  for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
+    if (lowerQuery === key.toLowerCase() || lowerQuery === key.toLowerCase().replace(/\s+/g, "")) {
+      return val;
+    }
+  }
+
+  const apiKey = (userApiKey || process.env.GEMINI_API_KEY || "").trim();
+
+  // If no API key is available, check fuzzy match in offline dictionary
+  if (!apiKey) {
+    for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
+      if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
+        return val;
+      }
+    }
+    throw new Error(
+      "MISSING_API_KEY: ไม่พบ Gemini API Key ในระบบเพื่อคำนวณอาหารนอกตาราง กรุณากรอก API Key ในหน้าต่างตั้งค่า"
+    );
+  }
+
+  const candidateModels = await getAvailableGeminiModels(apiKey);
+  const genAI = new GoogleGenerativeAI(apiKey);
+
+  const prompt = `คุณคือผู้เชี่ยวชาญด้านโภชนาการอาหาร หน้าที่ของคุณคือประมาณค่าพลังงานรวม (kcal) และสารอาหารหลัก (โปรตีน, คาร์บ, ไขมัน ในหน่วยกรัม) ของอาหารที่ระบุต่อไปนี้:
+"${query}"
+
+ข้อกำหนด:
+1. หากไม่ได้ระบุขนาด ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving)
+2. ปัดตัวเลขแคลอรีและสารอาหารเป็นจำนวนเต็มหรือทศนิยม 1 ตำแหน่ง
+3. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
+{
+  "food_name": "${query}",
+  "food_name_en": "Food Name English",
+  "calories": 120,
+  "macronutrients": {
+    "protein_g": 1.3,
+    "carbs_g": 27,
+    "fat_g": 0.3
+  },
+  "portion_description": "ขนาด 1 ที่ (~120g)"
+}`;
+
+  let lastError: any = null;
+
+  for (const modelName of candidateModels) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          temperature: 0.2,
+          maxOutputTokens: 1024,
+          responseMimeType: "application/json",
+        },
+      });
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      let text = response.text().trim();
+
+      // Clean JSON formatting if markdown wraps it
+      if (text.startsWith("```")) {
+        text = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+      }
+
+      const parsed = JSON.parse(text);
+
+      const parseNum = (val: any): number => {
+        if (typeof val === "number") return isNaN(val) ? 0 : val;
+        if (typeof val === "string") {
+          const match = val.match(/[\d.]+/);
+          return match ? parseFloat(match[0]) : 0;
+        }
+        return 0;
+      };
+
+      const cals = parseNum(parsed.calories || parsed.estimated_calories);
+      const p = parseNum(parsed.macronutrients?.protein_g);
+      const c = parseNum(parsed.macronutrients?.carbs_g);
+      const f = parseNum(parsed.macronutrients?.fat_g);
+
+      return {
+        food_name: parsed.food_name || query,
+        food_name_en: parsed.food_name_en || "",
+        calories: Math.max(0, Math.round(cals)),
+        macronutrients: {
+          protein_g: Math.max(0, Number(p.toFixed(1))),
+          carbs_g: Math.max(0, Number(c.toFixed(1))),
+          fat_g: Math.max(0, Number(f.toFixed(1))),
+        },
+        portion_description: parsed.portion_description || "ขนาด 1 ที่ปกติ",
+      };
+    } catch (err: any) {
+      console.warn(`[gemini-text] Model ${modelName} failed, attempting next model:`, err.message);
+      lastError = err;
+      continue;
+    }
+  }
+
+  // Fallback to fuzzy offline match if AI models were busy or rate-limited
+  for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
+    if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
+      return val;
+    }
+  }
+
+  throw lastError || new Error("ไม่สามารถประเมินแคลอรีได้ในขณะนี้ กรุณากรอกด้วยตนเอง");
+}
+

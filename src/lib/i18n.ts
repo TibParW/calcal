@@ -86,6 +86,10 @@ export const translations = {
     manual_calories: "พลังงานรวม (kcal)",
     manual_time: "เวลาที่ทาน",
     manual_macros_title: "สารอาหารหลัก (ไม่บังคับ)",
+    manual_calculate: "คำนวณ",
+    manual_calculating: "กำลังคิด...",
+    manual_calc_tooltip: "ให้ AI คำนวณแคลอรีและสารอาหารจากชื่อเมนูอัตโนมัติ",
+    manual_portion_hint: "ประมาณจาก: {portion}",
     manual_save: "บันทึกมื้ออาหาร",
     manual_cancel: "ยกเลิก",
 
@@ -254,6 +258,10 @@ export const translations = {
     manual_calories: "Total Calories (kcal)",
     manual_time: "Time",
     manual_macros_title: "Macronutrients (Optional)",
+    manual_calculate: "Calculate",
+    manual_calculating: "Thinking...",
+    manual_calc_tooltip: "Auto-calculate calories and macros from meal name with AI",
+    manual_portion_hint: "Estimated from: {portion}",
     manual_save: "Save Meal",
     manual_cancel: "Cancel",
 

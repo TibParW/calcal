@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { X } from "lucide-react";
+import { X, Sparkles, Loader2 } from "lucide-react";
 import { Macronutrients } from "@/types";
-import { getLocalTimeString } from "@/lib/storage";
+import { getLocalTimeString, getUserSettings, recordApiScanAttempt } from "@/lib/storage";
+import { estimateNutritionFromText } from "@/lib/gemini";
 import { useLanguage } from "@/context/LanguageContext";
 
 interface ManualEntryModalProps {
@@ -27,8 +28,47 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
   const [carbs, setCarbs] = useState<number | "">("");
   const [fat, setFat] = useState<number | "">("");
   const [time, setTime] = useState(getLocalTimeString());
+  const [isEstimating, setIsEstimating] = useState(false);
+  const [estimateHint, setEstimateHint] = useState<string | null>(null);
+  const [estimateError, setEstimateError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+
+  const handleAutoEstimate = async () => {
+    const trimmed = foodName.trim();
+    if (!trimmed || isEstimating) return;
+
+    setIsEstimating(true);
+    setEstimateError(null);
+    setEstimateHint(null);
+
+    try {
+      const settings = getUserSettings();
+      const apiKey = settings.gemini_api_key?.trim();
+
+      const result = await estimateNutritionFromText(trimmed, apiKey);
+      recordApiScanAttempt();
+
+      // Auto-fill values
+      setCalories(result.calories);
+      setProtein(result.macronutrients.protein_g);
+      setCarbs(result.macronutrients.carbs_g);
+      setFat(result.macronutrients.fat_g);
+
+      if (result.portion_description) {
+        setEstimateHint(
+          t("manual_portion_hint").replace("{portion}", result.portion_description)
+        );
+      }
+    } catch (err: any) {
+      console.warn("Manual estimate failed:", err);
+      setEstimateError(
+        err.message?.replace(/^MISSING_API_KEY:\s*/, "") || "ไม่สามารถคำนวณได้ กรุณากรอกด้วยตนเอง"
+      );
+    } finally {
+      setIsEstimating(false);
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,6 +90,8 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
     setProtein("");
     setCarbs("");
     setFat("");
+    setEstimateHint(null);
+    setEstimateError(null);
     onClose();
   };
 
@@ -81,14 +123,61 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
             <label className="text-[11px] font-medium text-neutral-400 uppercase tracking-wider block mb-1">
               {t("manual_name")}
             </label>
-            <input
-              type="text"
-              required
-              value={foodName}
-              onChange={(e) => setFoodName(e.target.value)}
-              placeholder={t("manual_name_placeholder")}
-              className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-900 dark:text-white text-sm focus:outline-none focus:border-neutral-400"
-            />
+
+            {/* Input Bar with Embedded Right-Side Calculate Button */}
+            <div className="relative flex items-center">
+              <input
+                type="text"
+                required
+                value={foodName}
+                onChange={(e) => {
+                  setFoodName(e.target.value);
+                  if (estimateError) setEstimateError(null);
+                }}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && foodName.trim() && calories === "") {
+                    e.preventDefault();
+                    handleAutoEstimate();
+                  }
+                }}
+                placeholder={t("manual_name_placeholder")}
+                className="w-full pl-3.5 pr-24 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-900 dark:text-white text-sm focus:outline-none focus:border-neutral-400"
+              />
+
+              {/* Action Button at the right end of the bar */}
+              <button
+                type="button"
+                onClick={handleAutoEstimate}
+                disabled={!foodName.trim() || isEstimating}
+                title={t("manual_calc_tooltip")}
+                className="absolute right-1.5 px-2.5 py-1.5 rounded-lg bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 text-[11px] font-semibold flex items-center gap-1.5 shadow-sm hover:opacity-90 active:scale-95 disabled:opacity-35 disabled:pointer-events-none transition cursor-pointer select-none"
+              >
+                {isEstimating ? (
+                  <>
+                    <Loader2 className="w-3 h-3 animate-spin" />
+                    <span>{t("manual_calculating")}</span>
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-3 h-3 text-amber-400 fill-amber-400" />
+                    <span>{t("manual_calculate")}</span>
+                  </>
+                )}
+              </button>
+            </div>
+
+            {/* Subtle Portion Tip / Error Feedback */}
+            {estimateHint && (
+              <p className="text-[11px] text-emerald-600 dark:text-emerald-400 mt-1.5 flex items-center gap-1 animate-in fade-in">
+                <span>✨</span>
+                <span>{estimateHint}</span>
+              </p>
+            )}
+            {estimateError && (
+              <p className="text-[11px] text-rose-500 mt-1.5 animate-in fade-in">
+                {estimateError}
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-3">
