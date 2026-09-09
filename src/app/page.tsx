@@ -17,6 +17,8 @@ import {
   saveUserSettings,
   addFoodLog,
   deleteFoodLog,
+  recordApiScanAttempt,
+  recordApiCooldown,
 } from "@/lib/storage";
 import { compressImageForAnalysis, createThumbnail } from "@/lib/imageUtils";
 
@@ -131,6 +133,8 @@ export default function HomePage() {
         headers["x-gemini-api-key"] = currentSettings.gemini_api_key.trim();
       }
 
+      recordApiScanAttempt();
+
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers,
@@ -145,12 +149,18 @@ export default function HomePage() {
       const data = await response.json();
 
       if (!response.ok) {
+        if (response.status === 429 || data.error?.includes("429") || data.error?.includes("โควตา")) {
+          recordApiCooldown(60);
+        }
         throw new Error(data.error || (lang === "en" ? "Error analyzing food image" : "เกิดข้อผิดพลาดในการวิเคราะห์อาหาร"));
       }
 
       setAnalysisResponse(data);
     } catch (err: any) {
       console.error("Analysis failed:", err);
+      if (err?.message?.includes("429") || err?.message?.includes("RESOURCE_EXHAUSTED") || err?.message?.includes("โควตา")) {
+        recordApiCooldown(60);
+      }
       setAnalysisError(err.message || (lang === "en" ? "Cannot connect to AI service. Please try again." : "ไม่สามารถติดต่อระบบ AI ได้ กรุณาลองใหม่อีกครั้ง"));
     } finally {
       setIsAnalyzing(false);

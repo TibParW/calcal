@@ -12,7 +12,9 @@ import {
   AlertCircle,
   Sparkles,
   Trash2,
+  Clock,
 } from "lucide-react";
+import { getApiQuotaUsage } from "@/lib/storage";
 
 interface EditableFoodItem extends FoodAnalysisResult {
   isSelected: boolean;
@@ -92,6 +94,37 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
   const [userNote, setUserNote] = useState<string>(initialNote);
   const [customApiKey, setCustomApiKey] = useState<string>("");
   const [showKeyInput, setShowKeyInput] = useState<boolean>(false);
+  const [cooldownSec, setCooldownSec] = useState<number>(0);
+
+  // Monitor live cooldown countdown if rate-limited (HTTP 429)
+  useEffect(() => {
+    if (!isOpen || !error) {
+      setCooldownSec(0);
+      return;
+    }
+
+    const isQuota =
+      error.includes("429") ||
+      error.includes("RESOURCE_EXHAUSTED") ||
+      error.includes("โควตา") ||
+      error.includes("Quota");
+
+    if (!isQuota) return;
+
+    const checkCooldown = () => {
+      const q = getApiQuotaUsage();
+      if (q.cooldownUntil && q.cooldownUntil > Date.now()) {
+        const remaining = Math.max(0, Math.ceil((q.cooldownUntil - Date.now()) / 1000));
+        setCooldownSec(remaining);
+      } else {
+        setCooldownSec(0);
+      }
+    };
+
+    checkCooldown();
+    const interval = setInterval(checkCooldown, 1000);
+    return () => clearInterval(interval);
+  }, [isOpen, error]);
 
   const quickTags = lang === "en" ? QUICK_TAGS_EN : QUICK_TAGS_TH;
 
@@ -343,6 +376,12 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
               error.includes("API_KEY_INVALID") ||
               error.includes("ไม่พบ Gemini API Key");
 
+            const isQuotaError =
+              error.includes("429") ||
+              error.includes("RESOURCE_EXHAUSTED") ||
+              error.includes("โควตา") ||
+              error.includes("Quota");
+
             return (
               <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-900 text-xs text-neutral-700 dark:text-neutral-300 space-y-3">
                 <div className="flex items-start gap-2">
@@ -351,6 +390,31 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                     {error.replace(/^(?:MISSING_API_KEY|API_KEY_INVALID):\s*/, "")}
                   </p>
                 </div>
+
+                {/* Live Cooldown Progress Bar when Rate-Limited */}
+                {(isQuotaError || cooldownSec > 0) && (
+                  <div className="space-y-1.5 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                    <div className="flex items-center justify-between text-[11px] text-amber-600 dark:text-amber-400 font-medium">
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 animate-spin text-amber-500" />
+                        <span>
+                          {t("quota_cooldown_msg").replace("{sec}", String(cooldownSec > 0 ? cooldownSec : 60))}
+                        </span>
+                      </span>
+                      <span className="font-mono text-xs font-bold text-amber-600 dark:text-amber-300">
+                        {cooldownSec > 0 ? cooldownSec : 60}s
+                      </span>
+                    </div>
+                    <div className="w-full h-2 rounded-full bg-neutral-200 dark:bg-neutral-800 overflow-hidden relative">
+                      <div
+                        className="h-full bg-amber-500 rounded-full transition-all duration-1000"
+                        style={{
+                          width: `${Math.max(5, Math.min(100, ((cooldownSec > 0 ? cooldownSec : 60) / 60) * 100))}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+                )}
 
                 {(isKeyError || showKeyInput) && (
                   <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
@@ -576,11 +640,16 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
             <>
               <button
                 type="button"
+                disabled={cooldownSec > 0}
                 onClick={onRetry}
-                className="flex-1 py-3 bg-neutral-900 hover:bg-black text-white dark:bg-white dark:text-neutral-900 rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95"
+                className="flex-1 py-3 bg-neutral-900 hover:bg-black text-white dark:bg-white dark:text-neutral-900 rounded-2xl text-xs font-semibold flex items-center justify-center gap-1.5 transition active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                <span>{t("modal_retry")}</span>
+                <RotateCcw className={`w-3.5 h-3.5 ${cooldownSec > 0 ? "animate-spin" : ""}`} />
+                <span>
+                  {cooldownSec > 0
+                    ? t("quota_retry_in").replace("{sec}", String(cooldownSec))
+                    : t("modal_retry")}
+                </span>
               </button>
               <button
                 type="button"

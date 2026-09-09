@@ -14,6 +14,7 @@ import {
 } from "@/lib/storage";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { QuotaMeter } from "./QuotaMeter";
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -333,6 +334,11 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               <span>{t("settings_api_key_link")}</span>
               <ExternalLink className="w-3 h-3" />
             </a>
+
+            {/* Quota Progress Bar */}
+            <div className="pt-2">
+              <QuotaMeter />
+            </div>
           </div>
 
           {/* Reset All Data */}

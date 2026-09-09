@@ -1,4 +1,4 @@
-import { FoodLogItem, UserSettings, DailySummary, StorageUsageInfo } from "@/types";
+import { FoodLogItem, UserSettings, DailySummary, StorageUsageInfo, ApiQuotaUsage } from "@/types";
 
 const LOGS_STORAGE_KEY = "CALCAL_FOOD_LOGS_V1";
 const SETTINGS_STORAGE_KEY = "CALCAL_USER_SETTINGS_V1";
@@ -433,4 +433,140 @@ export function getPast7DaysSummary(): WeeklyOverviewData {
     activeDaysCount,
     daysWithinGoal,
   };
+}
+
+/* =========================================================================
+ * API Quota & Rate Limit Tracking (Client-Side Sliding Window)
+ * ========================================================================= */
+
+const QUOTA_STORAGE_KEY = "CALCAL_API_QUOTA_V1";
+const RPM_LIMIT = 15;
+const RPD_LIMIT = 1500;
+
+interface StoredQuotaState {
+  timestamps: number[];
+  dailyDate: string;
+  dailyCount: number;
+  cooldownUntil: number | null;
+}
+
+export function getApiQuotaUsage(): ApiQuotaUsage {
+  try {
+    const raw = safeGetItem(QUOTA_STORAGE_KEY);
+    const now = Date.now();
+    const today = getLocalDateString();
+
+    if (!raw) {
+      return {
+        requestsThisMinute: 0,
+        rpmLimit: RPM_LIMIT,
+        requestsToday: 0,
+        rpdLimit: RPD_LIMIT,
+        cooldownUntil: null,
+      };
+    }
+
+    const state: StoredQuotaState = JSON.parse(raw);
+    const validTimestamps = (state.timestamps || []).filter((ts) => now - ts < 60000);
+    const dailyCount = state.dailyDate === today ? (state.dailyCount || 0) : 0;
+    const cooldownUntil = state.cooldownUntil && state.cooldownUntil > now ? state.cooldownUntil : null;
+
+    return {
+      requestsThisMinute: validTimestamps.length,
+      rpmLimit: RPM_LIMIT,
+      requestsToday: dailyCount,
+      rpdLimit: RPD_LIMIT,
+      cooldownUntil,
+    };
+  } catch {
+    return {
+      requestsThisMinute: 0,
+      rpmLimit: RPM_LIMIT,
+      requestsToday: 0,
+      rpdLimit: RPD_LIMIT,
+      cooldownUntil: null,
+    };
+  }
+}
+
+export function recordApiScanAttempt(): ApiQuotaUsage {
+  try {
+    const now = Date.now();
+    const today = getLocalDateString();
+    const raw = safeGetItem(QUOTA_STORAGE_KEY);
+    let state: StoredQuotaState = {
+      timestamps: [],
+      dailyDate: today,
+      dailyCount: 0,
+      cooldownUntil: null,
+    };
+
+    if (raw) {
+      try {
+        state = JSON.parse(raw);
+      } catch {}
+    }
+
+    // Filter timestamps within last 60s and add current
+    const validTimestamps = (state.timestamps || []).filter((ts) => now - ts < 60000);
+    validTimestamps.push(now);
+
+    const dailyCount = state.dailyDate === today ? (state.dailyCount || 0) + 1 : 1;
+    const cooldownUntil = state.cooldownUntil && state.cooldownUntil > now ? state.cooldownUntil : null;
+
+    const newState: StoredQuotaState = {
+      timestamps: validTimestamps,
+      dailyDate: today,
+      dailyCount,
+      cooldownUntil,
+    };
+
+    safeSetItem(QUOTA_STORAGE_KEY, JSON.stringify(newState));
+
+    return {
+      requestsThisMinute: validTimestamps.length,
+      rpmLimit: RPM_LIMIT,
+      requestsToday: dailyCount,
+      rpdLimit: RPD_LIMIT,
+      cooldownUntil,
+    };
+  } catch {
+    return getApiQuotaUsage();
+  }
+}
+
+export function recordApiCooldown(seconds: number = 60): void {
+  try {
+    const now = Date.now();
+    const today = getLocalDateString();
+    const raw = safeGetItem(QUOTA_STORAGE_KEY);
+    let state: StoredQuotaState = {
+      timestamps: [],
+      dailyDate: today,
+      dailyCount: 0,
+      cooldownUntil: null,
+    };
+
+    if (raw) {
+      try {
+        state = JSON.parse(raw);
+      } catch {}
+    }
+
+    state.cooldownUntil = now + seconds * 1000;
+    safeSetItem(QUOTA_STORAGE_KEY, JSON.stringify(state));
+  } catch (e) {
+    console.error("Failed to record quota cooldown", e);
+  }
+}
+
+export function clearApiCooldown(): void {
+  try {
+    const raw = safeGetItem(QUOTA_STORAGE_KEY);
+    if (raw) {
+      const state = JSON.parse(raw);
+      state.cooldownUntil = null;
+      safeSetItem(QUOTA_STORAGE_KEY, JSON.stringify(state));
+    }
+  } catch {}
 }

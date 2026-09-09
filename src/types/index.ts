@@ -78,3 +78,11 @@ export interface DailySummary {
   totalFat: number;
   itemsCount: number;
 }
+
+export interface ApiQuotaUsage {
+  requestsThisMinute: number; // in the last 60s sliding window
+  rpmLimit: number; // 15 RPM
+  requestsToday: number; // since 00:00 local time
+  rpdLimit: number; // 1500 RPD
+  cooldownUntil: number | null; // epoch ms if 429 encountered
+}
