@@ -85,12 +85,11 @@ const NUTRITION_LABEL_SYSTEM_PROMPT = `
 const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
-  process.env.GEMINI_MODEL,
-  "gemini-2.0-flash",
-  "gemini-3.6-flash",
   "gemini-1.5-flash",
+  "gemini-1.5-flash-latest",
+  "gemini-2.0-flash",
+  "gemini-2.0-flash-exp",
   "gemini-flash-latest",
-  "gemini-2.0-flash-lite",
 ].filter(Boolean) as string[];
 
 async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
@@ -147,12 +146,12 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
 
       // Reliable priority order with real Gemini production models
       const priority = [
-        "gemini-2.0-flash",
-        "gemini-3.6-flash",
         "gemini-1.5-flash",
+        "gemini-1.5-flash-latest",
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-exp",
         "gemini-flash-latest",
         "gemini-2.0-flash-lite",
-        "gemini-2.5-flash-lite",
       ];
       flashModels.sort((a, b) => {
         const idxA = priority.indexOf(a);
@@ -228,8 +227,8 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
-    // Try up to top 3 candidate models
-    const modelsToTry = candidateModels.slice(0, 3);
+    // Try all candidate models in sequence
+    const modelsToTry = candidateModels;
 
     for (const modelName of modelsToTry) {
       try {
@@ -243,10 +242,9 @@ export async function analyzeFoodImage(
           },
         });
 
-        // Set a 6.5s timeout per model: if a model hangs from 503 high demand queueing,
-        // immediately escape and jump to the next candidate model!
+        // Set a 12s timeout per model: prevents hanging indefinitely if Google queue is congested
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("MODEL_TIMEOUT: เซิร์ฟเวอร์ตอบสนองช้าเกินไป")), 6500)
+          setTimeout(() => reject(new Error("MODEL_TIMEOUT: เซิร์ฟเวอร์ตอบสนองช้าเกินไป")), 12000)
         );
 
         const result = (await Promise.race([

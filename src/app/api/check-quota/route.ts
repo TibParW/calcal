@@ -27,11 +27,11 @@ export async function POST(request: NextRequest) {
   }
 
   // Multi-model candidate list for live probe:
-  // Prioritize gemini-2.0-flash for high throughput & low latency, with seamless fallbacks
+  // Prioritize gemini-1.5-flash for rock-solid stability and universal availability
   const probeModels = [
-    "gemini-2.0-flash",
-    "gemini-3.6-flash",
     "gemini-1.5-flash",
+    "gemini-1.5-flash-latest",
+    "gemini-2.0-flash",
     "gemini-flash-latest",
   ];
 
