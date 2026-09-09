@@ -82,18 +82,18 @@ export const QuotaMeter: React.FC = () => {
     }
   };
 
-  const rpmPercent = Math.min(100, Math.round((quota.requestsThisMinute / quota.rpmLimit) * 100));
   const rpmRemaining = Math.max(0, quota.rpmLimit - quota.requestsThisMinute);
+  const rpmPercent = Math.min(100, Math.round((rpmRemaining / quota.rpmLimit) * 100));
   const dailyPercent = Math.min(100, Math.max(1, Math.round((quota.requestsToday / quota.rpdLimit) * 100)));
 
-  // Determine RPM bar color
-  const isHighRpm = quota.requestsThisMinute >= 12;
-  const isMaxRpm = quota.requestsThisMinute >= quota.rpmLimit;
+  // Determine RPM bar color based on remaining quota
+  const isLowQuota = rpmRemaining <= 3;
+  const isMaxRpm = rpmRemaining === 0;
   const inCooldown = cooldownSec > 0;
 
   const getRpmBarColor = () => {
     if (inCooldown || isMaxRpm) return "bg-rose-500";
-    if (isHighRpm) return "bg-amber-500";
+    if (isLowQuota) return "bg-amber-500";
     return "bg-emerald-500";
   };
 
@@ -119,7 +119,7 @@ export const QuotaMeter: React.FC = () => {
             <XCircle className="w-2.5 h-2.5" />
             <span>{liveStatus.isDaily ? "โควตารายวันเต็ม" : liveStatus.isHighDemand ? "เซิร์ฟเวอร์หนาแน่น" : "Google บล็อก 429"}</span>
           </span>
-        ) : isHighRpm ? (
+        ) : isLowQuota ? (
           <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 flex items-center gap-1">
             <AlertTriangle className="w-2.5 h-2.5" />
             <span>{t("quota_rpm_limit_warn")}</span>
@@ -176,17 +176,17 @@ export const QuotaMeter: React.FC = () => {
         )}
       </div>
 
-      {/* 1. RPM Progress Bar (Local 1-minute sliding window) */}
+      {/* 1. RPM Progress Bar (Remaining scans countdown) */}
       <div className="space-y-1.5">
         <div className="flex items-center justify-between text-[11px]">
           <span className="text-neutral-600 dark:text-neutral-400 font-medium flex items-center gap-1">
             <Clock className="w-3 h-3 text-neutral-400" />
-            {lang === "en" ? "Local Scans This Minute (15 RPM Max)" : "สถิติในเครื่องรอบ 1 นาทีล่าสุด (สูงสุด 15)"}
+            {lang === "en" ? "Quota Remaining This Minute" : "โควตานาทีนี้ (นับถอยหลัง)"}
           </span>
           <span className="font-medium text-neutral-900 dark:text-neutral-100">
             {inCooldown
               ? (lang === "en" ? `Wait ${cooldownSec}s` : `พักรอบ ${cooldownSec} วิ`)
-              : `ใช้ไป ${quota.requestsThisMinute} / 15`}
+              : (lang === "en" ? `Remaining ${rpmRemaining} / 15` : `เหลืออีก ${rpmRemaining} / 15 ครั้ง`)}
           </span>
         </div>
 
@@ -199,8 +199,8 @@ export const QuotaMeter: React.FC = () => {
         </div>
 
         <div className="flex items-center justify-between text-[10px] text-neutral-400 dark:text-neutral-500">
-          <span>0 (ว่าง)</span>
-          <span>เหลือโควตารอบนี้ ~{rpmRemaining} ครั้ง</span>
+          <span>0 (หมด)</span>
+          <span>สถิติในเครื่องรอบ 60 วิ</span>
           <span>15 (เต็ม)</span>
         </div>
       </div>

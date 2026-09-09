@@ -49,8 +49,8 @@ export const CameraAction: React.FC<CameraActionProps> = ({
   }, []);
 
   const rpmRemaining = Math.max(0, quota.rpmLimit - quota.requestsThisMinute);
-  const isHighRpm = quota.requestsThisMinute >= 12;
-  const isMaxRpm = quota.requestsThisMinute >= quota.rpmLimit;
+  const isLowQuota = rpmRemaining <= 3;
+  const isMaxRpm = rpmRemaining === 0;
   const inCooldown = cooldownSec > 0;
 
   const handleFileChange = (
@@ -105,21 +105,21 @@ export const CameraAction: React.FC<CameraActionProps> = ({
         onClick={onOpenSettings}
         title={
           lang === "en"
-            ? `AI Quota: ${quota.requestsThisMinute}/15 used (${rpmRemaining} remaining)`
-            : `โควตาสแกน AI: ใช้ไป ${quota.requestsThisMinute}/15 ครั้ง (เหลือ ${rpmRemaining} ครั้ง)`
+            ? `AI Quota: ${rpmRemaining}/15 remaining`
+            : `โควตาสแกน AI: เหลืออีก ${rpmRemaining}/15 ครั้ง`
         }
         className="w-full flex items-center justify-between px-1 py-0.5 text-neutral-400 dark:text-neutral-500 hover:text-neutral-700 dark:hover:text-neutral-200 transition cursor-pointer select-none group"
       >
         <div className="flex items-center gap-1.5">
           <span
             className={`w-1.5 h-1.5 rounded-full transition-colors ${
-              inCooldown ? "bg-rose-500 animate-ping" : isHighRpm ? "bg-amber-500" : "bg-emerald-500"
+              inCooldown ? "bg-rose-500 animate-ping" : isLowQuota ? "bg-amber-500" : "bg-emerald-500"
             }`}
           />
           <span className="text-[11px] font-medium tracking-tight">
             {inCooldown
               ? (lang === "en" ? `Resetting in ${cooldownSec}s` : `รีเซ็ตใน ${cooldownSec} วิ`)
-              : (lang === "en" ? `AI Quota (used ${quota.requestsThisMinute}/15)` : `โควตา AI (ใช้ ${quota.requestsThisMinute}/15)`)}
+              : (lang === "en" ? `AI Quota (remaining ${rpmRemaining}/15)` : `โควตา AI (เหลือ ${rpmRemaining}/15)`)}
           </span>
         </div>
 
@@ -128,17 +128,17 @@ export const CameraAction: React.FC<CameraActionProps> = ({
           <div className="w-20 sm:w-24 h-1 rounded-full bg-neutral-200/80 dark:bg-neutral-800 overflow-hidden">
             <div
               className={`h-full rounded-full transition-all duration-500 ${
-                inCooldown ? "bg-rose-500" : isHighRpm ? "bg-amber-500" : "bg-emerald-500"
+                inCooldown ? "bg-rose-500" : isLowQuota ? "bg-amber-500" : "bg-emerald-500"
               }`}
               style={{
                 width: inCooldown
                   ? `${Math.max(6, Math.min(100, (cooldownSec / 60) * 100))}%`
-                  : `${Math.min(100, (quota.requestsThisMinute / 15) * 100)}%`,
+                  : `${Math.min(100, (rpmRemaining / 15) * 100)}%`,
               }}
             />
           </div>
           <span className="font-mono text-[10px] font-medium text-neutral-500 dark:text-neutral-400 min-w-[32px] text-right">
-            {inCooldown ? `${cooldownSec}s` : `${quota.requestsThisMinute}/15`}
+            {inCooldown ? `${cooldownSec}s` : `${rpmRemaining}/15`}
           </span>
         </div>
       </button>
