@@ -59,14 +59,14 @@ export async function POST(request: NextRequest) {
   "portion_description": "ขนาด 1 ที่ (~120g)"
 }`;
 
-    // Priority ultra-fast models in Google Generative AI
+    // 2-Step Cascade for Text Estimation:
+    // Step 1: gemini-2.5-flash-lite (Ultra-fast response ~0.5s)
+    // Step 2: gemini-3.8-flash (Thinking & In-depth Nutrition Knowledge)
     const fastModels = [
       "gemini-2.5-flash-lite",
+      "gemini-3.8-flash",
       "gemini-2.5-flash",
       "gemini-flash-latest",
-      "gemini-3.5-flash-lite",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
     ];
 
     let lastError: any = null;

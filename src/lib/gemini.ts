@@ -87,11 +87,9 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 const STATIC_CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
   "gemini-2.5-flash",
+  "gemini-3.8-flash",
   "gemini-flash-latest",
   "gemini-2.5-flash-lite",
-  "gemini-3.5-flash",
-  "gemini-2.0-flash",
-  "gemini-1.5-flash",
 ].filter(Boolean) as string[];
 
 async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
@@ -146,14 +144,12 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
       );
       const otherModels = validModels.filter((name: string) => !name.includes("flash"));
 
-      // Sort with priority for stable standard flash versions first
+      // 2-Step Cascade: Step 1 = gemini-2.5-flash (Fast & Accurate), Step 2 = gemini-3.8-flash (Thinking & In-depth)
       const priority = [
         "gemini-2.5-flash",
+        "gemini-3.8-flash",
         "gemini-flash-latest",
         "gemini-2.5-flash-lite",
-        "gemini-3.5-flash",
-        "gemini-2.0-flash",
-        "gemini-1.5-flash",
       ];
       flashModels.sort((a, b) => {
         const idxA = priority.indexOf(a);
