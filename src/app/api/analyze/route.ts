@@ -5,7 +5,13 @@ export const maxDuration = 30; // 30 seconds max duration for Vercel functions
 export const dynamic = 'force-dynamic';
 
 export async function POST(request: NextRequest) {
+  let userApiKey: string | undefined = undefined;
   try {
+    const rawKey = request.headers.get("x-gemini-api-key");
+    if (rawKey && rawKey.trim().length > 0) {
+      userApiKey = rawKey.trim();
+    }
+
     const body = await request.json();
     const { image, mimeType, note, scanMode } = body;
 
@@ -15,10 +21,6 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       );
     }
-
-    // Optional user-supplied API key from client header (fallback if server env not set)
-    const rawKey = request.headers.get("x-gemini-api-key");
-    const userApiKey = rawKey && rawKey.trim().length > 0 ? rawKey.trim() : undefined;
 
     const result = await analyzeFoodImage(
       image,
@@ -38,8 +40,12 @@ export async function POST(request: NextRequest) {
     ) {
       if (errorMessage.includes("404") || errorMessage.includes("not found")) {
         errorMessage = "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่มลองใหม่อีกครั้ง";
-      } else if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
-        errorMessage = "โควตา Gemini API เต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า";
+      } else if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED") || errorMessage.includes("โควตา")) {
+        if (userApiKey) {
+          errorMessage = "โควตาการเรียกใช้งานของ Google AI เต็มชั่วคราว (Google จำกัดจำนวนครั้งต่อนาทีบน Free Tier) กรุณารอประมาณ 1 นาทีแล้วกด 'ลองใหม่อีกครั้ง' ครับ";
+        } else {
+          errorMessage = "โควตาส่วนกลางเต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า";
+        }
       } else if (errorMessage.includes("API_KEY_INVALID") || errorMessage.includes("API key not valid")) {
         errorMessage = "API_KEY_INVALID: Gemini API Key ไม่ถูกต้อง กรุณาตรวจสอบ Key ในหน้าตั้งค่า";
       } else {

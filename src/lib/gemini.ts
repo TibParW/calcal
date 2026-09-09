@@ -253,13 +253,15 @@ export async function analyzeFoodImage(
         throw new Error("API_KEY_INVALID: Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
       }
 
-      // If quota exceeded, throw immediate user-friendly error
+      // If quota exceeded (429), pause briefly and try next candidate model
       if (
         msg.includes("QUOTA_EXCEEDED") ||
         msg.includes("RESOURCE_EXHAUSTED") ||
         err?.status === 429
       ) {
-        throw new Error("โควตา Gemini API เต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า");
+        console.warn(`[Gemini API] Quota limit hit on "${modelName}", trying next candidate model in 1.2s...`);
+        await new Promise((resolve) => setTimeout(resolve, 1200));
+        continue;
       }
     }
   }
@@ -273,6 +275,21 @@ export async function analyzeFoodImage(
       throw new Error(
         "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' หรือตรวจสอบสัญญาณอินเทอร์เน็ต"
       );
+    }
+    if (
+      lastError?.message?.includes("QUOTA_EXCEEDED") ||
+      lastError?.message?.includes("RESOURCE_EXHAUSTED") ||
+      lastError?.status === 429
+    ) {
+      if (userApiKey) {
+        throw new Error(
+          "โควตาการเรียกใช้งานของ Google AI เต็มชั่วคราว (Google จำกัดจำนวนครั้งต่อนาทีบน Free Tier) กรุณารอประมาณ 1 นาทีแล้วกด 'ลองใหม่อีกครั้ง' ครับ"
+        );
+      } else {
+        throw new Error(
+          "โควตาส่วนกลางเต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ Gemini API Key ส่วนตัวในหน้าตั้งค่า"
+        );
+      }
     }
     throw lastError || new Error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพอาหารด้วย AI กรุณาลองใหม่อีกครั้ง");
   }
