@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Gauge, Zap, Clock, ShieldCheck, AlertTriangle, RefreshCw, ExternalLink, CheckCircle2, XCircle } from "lucide-react";
-import { getApiQuotaUsage, getLastApiStatus, saveLastApiStatus, getUserSettings, LastApiStatus } from "@/lib/storage";
+import { getApiQuotaUsage, getLastApiStatus, saveLastApiStatus, clearApiCooldown, getUserSettings, LastApiStatus } from "@/lib/storage";
 import { ApiQuotaUsage } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 
@@ -70,6 +70,13 @@ export const QuotaMeter: React.FC = () => {
 
       setLiveStatus(result);
       saveLastApiStatus(result);
+
+      // If Google AI is confirmed alive & OK, immediately cancel any previous cooldown timer
+      if (data.ok) {
+        clearApiCooldown();
+        setCooldownSec(0);
+        setQuota(getApiQuotaUsage());
+      }
     } catch (e: any) {
       const errResult: LastApiStatus = {
         ok: false,
