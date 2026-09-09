@@ -81,6 +81,84 @@ const NUTRITION_LABEL_SYSTEM_PROMPT = `
 }
 `;
 
+// In-memory cache for available Gemini models per API key
+const modelsCache = new Map<string, { models: string[]; expires: number }>();
+
+const STATIC_CANDIDATE_MODELS = [
+  process.env.GEMINI_MODEL,
+  "gemini-3.8-flash",
+  "gemini-3.7-flash",
+  "gemini-3.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
+].filter(Boolean) as string[];
+
+async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
+  const cached = modelsCache.get(apiKey);
+  const now = Date.now();
+  if (cached && cached.expires > now) {
+    return cached.models;
+  }
+
+  try {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+    const res = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`,
+      { signal: controller.signal }
+    );
+    clearTimeout(timeoutId);
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      const reason = errData?.error?.details?.[0]?.reason || errData?.error?.status || "";
+      const message = errData?.error?.message || "";
+
+      if (
+        reason === "API_KEY_INVALID" ||
+        message.includes("API key not valid") ||
+        res.status === 400
+      ) {
+        throw new Error("API_KEY_INVALID: Gemini API Key ไม่ถูกต้องหรือถูกเพิกถอน กรุณาตรวจสอบ Key ใน Google AI Studio");
+      }
+      return STATIC_CANDIDATE_MODELS;
+    }
+
+    const data = await res.json();
+    if (Array.isArray(data.models) && data.models.length > 0) {
+      const validModels: string[] = data.models
+        .filter(
+          (m: any) =>
+            Array.isArray(m.supportedGenerationMethods) &&
+            m.supportedGenerationMethods.includes("generateContent")
+        )
+        .map((m: any) => (m.name || "").replace(/^models\//, ""))
+        .filter(Boolean);
+
+      const flashModels = validModels.filter((name: string) => name.includes("flash"));
+      const otherModels = validModels.filter((name: string) => !name.includes("flash"));
+
+      flashModels.sort((a, b) => b.localeCompare(a, undefined, { numeric: true }));
+
+      const sorted = [...flashModels, ...otherModels];
+      if (sorted.length > 0) {
+        modelsCache.set(apiKey, { models: sorted, expires: now + 10 * 60 * 1000 });
+        return sorted;
+      }
+    }
+  } catch (fetchErr: any) {
+    if (fetchErr.message?.startsWith("API_KEY_INVALID")) {
+      throw fetchErr;
+    }
+    console.warn("[Gemini API] Failed to fetch live models list, falling back to static list:", fetchErr?.message || fetchErr);
+  }
+
+  return STATIC_CANDIDATE_MODELS;
+}
+
 export async function analyzeFoodImage(
   base64Data: string,
   mimeType: string = "image/jpeg",
@@ -88,11 +166,11 @@ export async function analyzeFoodImage(
   userNote?: string,
   scanMode: "food" | "nutrition_label" = "food"
 ): Promise<MultiFoodAnalysisResponse> {
-  const apiKey = userApiKey || process.env.GEMINI_API_KEY;
+  const apiKey = (userApiKey || process.env.GEMINI_API_KEY || "").trim();
 
   if (!apiKey) {
     throw new Error(
-      "MISSING_API_KEY: ไม่พบ Gemini API Key กรุณาตั้งค่า GEMINI_API_KEY ในไฟล์ .env หรือกรอกในเมนูตั้งค่าของหน้าเว็บ"
+      "MISSING_API_KEY: ไม่พบ Gemini API Key ในระบบ กรุณากรอก API Key ในหน้าต่างตั้งค่าเพื่อเริ่มใช้งาน"
     );
   }
 
@@ -101,16 +179,8 @@ export async function analyzeFoodImage(
     ? base64Data.split(",")[1]
     : base64Data;
 
+  const candidateModels = await getAvailableGeminiModels(apiKey);
   const genAI = new GoogleGenerativeAI(apiKey);
-
-  const CANDIDATE_MODELS = [
-    process.env.GEMINI_MODEL,
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-2.5-flash-lite",
-    "gemini-1.5-flash-latest",
-    "gemini-1.5-flash",
-  ].filter(Boolean) as string[];
 
   const systemInstruction =
     scanMode === "nutrition_label"
@@ -137,7 +207,7 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
-  for (const modelName of CANDIDATE_MODELS) {
+    for (const modelName of candidateModels) {
     try {
       const model = genAI.getGenerativeModel({
         model: modelName,
@@ -180,7 +250,7 @@ export async function analyzeFoodImage(
         msg.includes("API_KEY_EXPIRED") ||
         err?.status === 400
       ) {
-        throw new Error("Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
+        throw new Error("API_KEY_INVALID: Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
       }
 
       // If quota exceeded, throw immediate user-friendly error
@@ -201,7 +271,7 @@ export async function analyzeFoodImage(
       lastError?.message?.includes("not found")
     ) {
       throw new Error(
-        "ไม่พบโมเดล Gemini ที่รองรับบน API Key นี้ กรุณาตรวจสอบสถานะ API Key ใน Google AI Studio"
+        "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' หรือตรวจสอบสัญญาณอินเทอร์เน็ต"
       );
     }
     throw lastError || new Error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพอาหารด้วย AI กรุณาลองใหม่อีกครั้ง");

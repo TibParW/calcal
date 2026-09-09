@@ -17,7 +17,8 @@ export async function POST(request: NextRequest) {
     }
 
     // Optional user-supplied API key from client header (fallback if server env not set)
-    const userApiKey = request.headers.get("x-gemini-api-key") || undefined;
+    const rawKey = request.headers.get("x-gemini-api-key");
+    const userApiKey = rawKey && rawKey.trim().length > 0 ? rawKey.trim() : undefined;
 
     const result = await analyzeFoodImage(
       image,
@@ -36,19 +37,23 @@ export async function POST(request: NextRequest) {
       errorMessage.includes("generativelanguage.googleapis.com")
     ) {
       if (errorMessage.includes("404") || errorMessage.includes("not found")) {
-        errorMessage = "ไม่พบโมเดล AI ที่ร้องขอ หรือโมเดลกำลังปรับปรุง กรุณาลองใหม่อีกครั้ง";
+        errorMessage = "ไม่สามารถเชื่อมต่อกับโมเดลวิเคราะห์ภาพได้ในขณะนี้ กรุณากดปุ่มลองใหม่อีกครั้ง";
       } else if (errorMessage.includes("429") || errorMessage.includes("RESOURCE_EXHAUSTED")) {
-        errorMessage = "โควตา Gemini API หมดชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ในหน้าตั้งค่า";
-      } else if (errorMessage.includes("API_KEY_INVALID")) {
-        errorMessage = "Gemini API Key ไม่ถูกต้อง กรุณาตรวจสอบ Key ในหน้าตั้งค่า";
+        errorMessage = "โควตา Gemini API เต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า";
+      } else if (errorMessage.includes("API_KEY_INVALID") || errorMessage.includes("API key not valid")) {
+        errorMessage = "API_KEY_INVALID: Gemini API Key ไม่ถูกต้อง กรุณาตรวจสอบ Key ในหน้าตั้งค่า";
       } else {
         errorMessage = "เกิดข้อผิดพลาดในการเชื่อมต่อกับ Google AI กรุณาลองใหม่อีกครั้ง";
       }
     }
 
+    const isKeyError =
+      errorMessage.includes("MISSING_API_KEY") ||
+      errorMessage.includes("API_KEY_INVALID");
+
     return NextResponse.json(
       { error: errorMessage },
-      { status: error?.message?.includes("MISSING_API_KEY") ? 401 : 500 }
+      { status: isKeyError ? 401 : 500 }
     );
   }
 }

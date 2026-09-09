@@ -73,23 +73,30 @@ export default function HomePage() {
     refreshData();
   }, [refreshData]);
 
-  // Check for midnight rollover (00:00) when page stays open or gains focus
+  // Check for midnight rollover (00:00) and re-sync settings when page stays open or gains focus/visibility
   useEffect(() => {
-    const checkDateChange = () => {
+    const handleWakeOrFocus = () => {
       const today = getLocalDateString();
-      // If user was on previous today and midnight passed, advance to today
       if (selectedDate !== today && selectedDate < today) {
-        // You can choose to auto-advance if it was today previously
+        setSelectedDate(today);
       }
+      refreshData();
     };
 
-    window.addEventListener("focus", checkDateChange);
-    const interval = setInterval(checkDateChange, 60000); // check every minute
+    window.addEventListener("focus", handleWakeOrFocus);
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        handleWakeOrFocus();
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    const interval = setInterval(handleWakeOrFocus, 60000); // check every minute
     return () => {
-      window.removeEventListener("focus", checkDateChange);
+      window.removeEventListener("focus", handleWakeOrFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
       clearInterval(interval);
     };
-  }, [selectedDate]);
+  }, [selectedDate, refreshData]);
 
   // Process food photo with Gemini AI
   const processImageAnalysis = async (
@@ -120,8 +127,8 @@ export default function HomePage() {
         "Content-Type": "application/json",
       };
 
-      if (currentSettings.gemini_api_key) {
-        headers["x-gemini-api-key"] = currentSettings.gemini_api_key;
+      if (currentSettings.gemini_api_key && currentSettings.gemini_api_key.trim()) {
+        headers["x-gemini-api-key"] = currentSettings.gemini_api_key.trim();
       }
 
       const response = await fetch("/api/analyze", {
@@ -291,6 +298,14 @@ export default function HomePage() {
         error={analysisError}
         initialNote={currentNote}
         scanMode={scanMode}
+        hasSavedApiKey={Boolean(settings.gemini_api_key && settings.gemini_api_key.trim())}
+        savedApiKeyMasked={
+          settings.gemini_api_key && settings.gemini_api_key.trim().length > 8
+            ? `${settings.gemini_api_key.trim().slice(0, 6)}••••••••${settings.gemini_api_key.trim().slice(-4)}`
+            : Boolean(settings.gemini_api_key)
+            ? "••••••••••••"
+            : undefined
+        }
         onSave={handleSaveAiBatchResult}
         onRetry={() => {
           if (currentFile) {
@@ -303,8 +318,8 @@ export default function HomePage() {
           }
         }}
         onSaveApiKey={(key) => {
-          saveUserSettings({ gemini_api_key: key });
-          setSettings(getUserSettings());
+          const updated = saveUserSettings({ gemini_api_key: key.trim() });
+          setSettings(updated);
         }}
       />
 

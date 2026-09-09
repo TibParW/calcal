@@ -31,6 +31,8 @@ interface AnalysisModalProps {
   error: string | null;
   initialNote?: string;
   scanMode?: "food" | "nutrition_label";
+  hasSavedApiKey?: boolean;
+  savedApiKeyMasked?: string;
   onSave: (itemsToSave: Array<{
     food_name: string;
     food_name_en?: string;
@@ -78,6 +80,8 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
   error,
   initialNote = "",
   scanMode = "food",
+  hasSavedApiKey = false,
+  savedApiKeyMasked,
   onSave,
   onRetry,
   onReAnalyzeWithNote,
@@ -333,35 +337,70 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
           )}
 
           {/* Error Message */}
-          {error && !isLoading && (
-            <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-900 text-xs text-neutral-700 dark:text-neutral-300 space-y-3">
-              <p className="font-semibold text-rose-500">{error}</p>
+          {error && !isLoading && (() => {
+            const isKeyError =
+              error.includes("MISSING_API_KEY") ||
+              error.includes("API_KEY_INVALID") ||
+              error.includes("ไม่พบ Gemini API Key");
 
-              {(error.includes("API Key") || showKeyInput) && (
-                <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
-                  <span className="text-[11px] font-medium text-neutral-500 flex items-center gap-1">
-                    <Key className="w-3 h-3 text-neutral-400" />
-                    {t("modal_api_key_prompt")}
-                  </span>
-                  <div className="flex gap-2">
-                    <input
-                      type="password"
-                      value={customApiKey}
-                      onChange={(e) => setCustomApiKey(e.target.value)}
-                      placeholder="AIzaSy..."
-                      className="flex-1 text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#1c1c20] border border-neutral-200 dark:border-neutral-700"
-                    />
-                    <button
-                      onClick={handleSaveCustomKey}
-                      className="px-3 py-2 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-xl text-xs font-semibold"
-                    >
-                      {t("modal_api_key_btn")}
-                    </button>
-                  </div>
+            return (
+              <div className="p-4 rounded-2xl bg-neutral-100 dark:bg-neutral-900 text-xs text-neutral-700 dark:text-neutral-300 space-y-3">
+                <div className="flex items-start gap-2">
+                  <AlertCircle className="w-4 h-4 text-rose-500 shrink-0 mt-0.5" />
+                  <p className="font-semibold text-rose-500 leading-snug">
+                    {error.replace(/^(?:MISSING_API_KEY|API_KEY_INVALID):\s*/, "")}
+                  </p>
                 </div>
-              )}
-            </div>
-          )}
+
+                {(isKeyError || showKeyInput) && (
+                  <div className="space-y-2 pt-2 border-t border-neutral-200 dark:border-neutral-800">
+                    {hasSavedApiKey && !showKeyInput ? (
+                      <div className="space-y-1.5">
+                        <div className="flex items-center justify-between text-[11px] text-neutral-500 dark:text-neutral-400">
+                          <span className="flex items-center gap-1">
+                            <Key className="w-3 h-3 text-neutral-400" />
+                            {lang === "en" ? "Saved Key in Settings:" : "Key ที่บันทึกไว้ในระบบ:"}
+                          </span>
+                          <span className="font-mono text-neutral-700 dark:text-neutral-300">
+                            {savedApiKeyMasked || "••••••••••••"}
+                          </span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setShowKeyInput(true)}
+                          className="text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                        >
+                          {lang === "en" ? "Change or update API Key" : "ต้องการเปลี่ยนหรือใส่ Key ใหม่"}
+                        </button>
+                      </div>
+                    ) : (
+                      <div className="space-y-2">
+                        <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+                          <Key className="w-3 h-3 text-neutral-400" />
+                          {t("modal_api_key_prompt")}
+                        </span>
+                        <div className="flex gap-2">
+                          <input
+                            type="password"
+                            value={customApiKey}
+                            onChange={(e) => setCustomApiKey(e.target.value)}
+                            placeholder="AIzaSy..."
+                            className="flex-1 text-xs px-3 py-2 rounded-xl bg-white dark:bg-[#1c1c20] border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white"
+                          />
+                          <button
+                            onClick={handleSaveCustomKey}
+                            className="px-3 py-2 bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 rounded-xl text-xs font-semibold shrink-0"
+                          >
+                            {t("modal_api_key_btn")}
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+              </div>
+            );
+          })()}
 
           {/* Multi-Dish / Detected Items List */}
           {!isLoading && !error && items.length > 0 && (
