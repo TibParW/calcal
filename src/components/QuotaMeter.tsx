@@ -60,9 +60,11 @@ export const QuotaMeter: React.FC = () => {
         status: data.status,
         message: data.message,
         testedAt: data.testedAt || new Date().toLocaleTimeString("th-TH"),
+        model: data.model,
         isRateLimit: data.isRateLimit,
         isDaily: data.isDaily,
         isHighDemand: data.isHighDemand,
+        isKeyInvalid: data.isKeyInvalid,
         latencyMs: data.latencyMs,
       };
 
@@ -137,7 +139,7 @@ export const QuotaMeter: React.FC = () => {
             ) : liveStatus?.ok === false ? (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 flex items-center gap-1">
                 <XCircle className="w-2.5 h-2.5" />
-                <span>{liveStatus.isDaily ? "โควตารายวันเต็ม" : liveStatus.isHighDemand ? "เซิร์ฟเวอร์หนาแน่น" : "Google บล็อก 429"}</span>
+                <span>{liveStatus.isDaily ? "โควตารายวันเต็ม" : liveStatus.isHighDemand ? "เซิร์ฟเวอร์หนาแน่น" : liveStatus.isRateLimit ? "โควตา 15 RPM เต็ม" : liveStatus.isKeyInvalid ? "คีย์ไม่ถูกต้อง" : "Google มีปัญหา"}</span>
               </span>
             ) : isLowQuota ? (
               <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 flex items-center gap-1">

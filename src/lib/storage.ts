@@ -578,9 +578,11 @@ export interface LastApiStatus {
   status: number;
   message: string;
   testedAt?: string;
+  model?: string;
   isRateLimit?: boolean;
   isDaily?: boolean;
   isHighDemand?: boolean;
+  isKeyInvalid?: boolean;
   latencyMs?: number;
 }
 

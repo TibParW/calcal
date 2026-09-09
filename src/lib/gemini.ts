@@ -86,10 +86,11 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
-  "gemini-2.5-flash",
+  "gemini-3.6-flash",
   "gemini-2.0-flash",
   "gemini-1.5-flash",
   "gemini-flash-latest",
+  "gemini-2.5-flash",
   "gemini-2.0-flash-lite",
   "gemini-2.5-pro",
 ].filter(Boolean) as string[];
@@ -148,10 +149,11 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
 
       // Reliable priority order with real Gemini production models
       const priority = [
-        "gemini-2.5-flash",
+        "gemini-3.6-flash",
         "gemini-2.0-flash",
         "gemini-1.5-flash",
         "gemini-flash-latest",
+        "gemini-2.5-flash",
         "gemini-2.0-flash-lite",
         "gemini-2.5-flash-lite",
         "gemini-2.5-pro",
