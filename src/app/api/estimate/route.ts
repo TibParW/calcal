@@ -63,13 +63,15 @@ export async function POST(request: NextRequest) {
   "portion_description": "ข้าวกะเพราหมู 1 จาน + ไข่ดาว 1 ฟอง"
 }`;
 
-    // 2-Step Cascade for Text Estimation:
-    // Step 1: gemini-2.5-flash-lite (Ultra-fast response ~0.5s)
-    // Step 2: gemini-3.8-flash (Thinking & In-depth Nutrition Knowledge)
+    // Multi-Model Cascade for Text Estimation:
+    // 1. gemini-2.5-flash (Fast & Accurate)
+    // 2. gemini-2.0-flash (High Throughput / Failover)
+    // 3. gemini-1.5-flash (Mature Stable Fallback)
     const fastModels = [
-      "gemini-2.5-flash-lite",
-      "gemini-3.8-flash",
       "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+      "gemini-2.0-flash-lite",
       "gemini-flash-latest",
     ];
 

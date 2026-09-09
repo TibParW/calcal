@@ -87,9 +87,11 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 const STATIC_CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
   "gemini-2.5-flash",
-  "gemini-3.8-flash",
+  "gemini-2.0-flash",
+  "gemini-1.5-flash",
   "gemini-flash-latest",
-  "gemini-2.5-flash-lite",
+  "gemini-2.0-flash-lite",
+  "gemini-2.5-pro",
 ].filter(Boolean) as string[];
 
 async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
@@ -144,12 +146,15 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
       );
       const otherModels = validModels.filter((name: string) => !name.includes("flash"));
 
-      // 2-Step Cascade: Step 1 = gemini-2.5-flash (Fast & Accurate), Step 2 = gemini-3.8-flash (Thinking & In-depth)
+      // Reliable priority order with real Gemini production models
       const priority = [
         "gemini-2.5-flash",
-        "gemini-3.8-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
         "gemini-flash-latest",
+        "gemini-2.0-flash-lite",
         "gemini-2.5-flash-lite",
+        "gemini-2.5-pro",
       ];
       flashModels.sort((a, b) => {
         const idxA = priority.indexOf(a);
@@ -224,8 +229,8 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
-    // Limit to top 2 candidate models to stay well within Vercel serverless execution limits
-    const modelsToTry = candidateModels.slice(0, 2);
+    // Try up to top 3 candidate models to stay well within execution limits while providing reliable failover
+    const modelsToTry = candidateModels.slice(0, 3);
 
     for (const modelName of modelsToTry) {
       try {
@@ -283,6 +288,18 @@ export async function analyzeFoodImage(
           console.warn(`[Gemini API] Quota limit hit on "${modelName}", trying alternate candidate model...`);
           continue;
         }
+
+        // If high demand (503 / UNAVAILABLE / overloaded), try next candidate model immediately
+        if (
+          msg.includes("high demand") ||
+          msg.includes("503") ||
+          msg.includes("UNAVAILABLE") ||
+          msg.includes("overloaded") ||
+          err?.status === 503
+        ) {
+          console.warn(`[Gemini API] Model "${modelName}" is experiencing high demand (503), switching to backup model...`);
+          continue;
+        }
       }
     }
 
@@ -310,6 +327,16 @@ export async function analyzeFoodImage(
           "โควตาส่วนกลางเต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ Gemini API Key ส่วนตัวในหน้าตั้งค่า"
         );
       }
+    }
+    if (
+      lastError?.message?.includes("high demand") ||
+      lastError?.message?.includes("503") ||
+      lastError?.message?.includes("UNAVAILABLE") ||
+      lastError?.status === 503
+    ) {
+      throw new Error(
+        "เซิร์ฟเวอร์ Google AI กำลังมีผู้ใช้งานหนาแน่นชั่วคราว (High Demand) กรุณารอสักครู่แล้วกดปุ่ม 'ลองใหม่อีกครั้ง' ครับ"
+      );
     }
     throw lastError || new Error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพอาหารด้วย AI กรุณาลองใหม่อีกครั้ง");
   }

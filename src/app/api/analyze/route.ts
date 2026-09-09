@@ -46,6 +46,12 @@ export async function POST(request: NextRequest) {
         } else {
           errorMessage = "โควตาส่วนกลางเต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า";
         }
+      } else if (
+        errorMessage.includes("high demand") ||
+        errorMessage.includes("503") ||
+        errorMessage.includes("UNAVAILABLE")
+      ) {
+        errorMessage = "เซิร์ฟเวอร์ Google AI มีผู้ใช้งานหนาแน่นชั่วคราว (High Demand) กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' หรือระบบจะสลับโมเดลให้อัตโนมัติครับ";
       } else if (errorMessage.includes("API_KEY_INVALID") || errorMessage.includes("API key not valid")) {
         errorMessage = "API_KEY_INVALID: Gemini API Key ไม่ถูกต้อง กรุณาตรวจสอบ Key ในหน้าตั้งค่า";
       } else {
