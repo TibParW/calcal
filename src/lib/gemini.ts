@@ -322,6 +322,13 @@ export async function analyzeFoodImage(
       cleanJson = cleanJson.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?\s*```$/, "").trim();
     }
 
+    // Extract outer { ... } block to safely bypass any thinking thoughts or commentary
+    const firstBrace = cleanJson.indexOf("{");
+    const lastBrace = cleanJson.lastIndexOf("}");
+    if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+      cleanJson = cleanJson.substring(firstBrace, lastBrace + 1);
+    }
+
     let parsed: any;
     try {
       parsed = JSON.parse(cleanJson);
