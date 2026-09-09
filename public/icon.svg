@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="none">
+  <rect width="512" height="512" rx="128" fill="#16a34a"/>
+  <!-- Leaf / Food silhouette -->
+  <path d="M256 96C180 96 112 152 112 240C112 344 208 400 256 416C304 400 400 344 400 240C400 152 332 96 256 96Z" fill="#22c55e" opacity="0.9"/>
+  <!-- Flame / Calorie indicator -->
+  <path d="M256 160C230 200 210 240 210 270C210 300 230 330 256 340C282 330 302 300 302 270C302 240 282 200 256 160Z" fill="#fef08a"/>
+  <!-- Core flame -->
+  <path d="M256 240C245 260 238 275 238 290C238 305 246 318 256 322C266 318 274 305 274 290C274 275 267 260 256 240Z" fill="#f97316"/>
+  <!-- Cute sparkle -->
+  <circle cx="340" cy="180" r="16" fill="#ffffff" opacity="0.8"/>
+  <circle cx="170" cy="200" r="12" fill="#ffffff" opacity="0.7"/>
+</svg>
