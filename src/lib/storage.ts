@@ -570,3 +570,32 @@ export function clearApiCooldown(): void {
     }
   } catch {}
 }
+
+const LAST_API_STATUS_KEY = "calcal_last_api_status";
+
+export interface LastApiStatus {
+  ok: boolean;
+  status: number;
+  message: string;
+  testedAt?: string;
+  isRateLimit?: boolean;
+  isDaily?: boolean;
+  isHighDemand?: boolean;
+  latencyMs?: number;
+}
+
+export function getLastApiStatus(): LastApiStatus | null {
+  try {
+    const raw = safeGetItem(LAST_API_STATUS_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+}
+
+export function saveLastApiStatus(status: LastApiStatus): void {
+  try {
+    safeSetItem(LAST_API_STATUS_KEY, JSON.stringify(status));
+  } catch {}
+}
+
