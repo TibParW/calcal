@@ -49,7 +49,10 @@ export async function POST(request: NextRequest) {
       } else if (errorMessage.includes("API_KEY_INVALID") || errorMessage.includes("API key not valid")) {
         errorMessage = "API_KEY_INVALID: Gemini API Key ไม่ถูกต้อง กรุณาตรวจสอบ Key ในหน้าตั้งค่า";
       } else {
-        errorMessage = "เกิดข้อผิดพลาดในการเชื่อมต่อกับ Google AI กรุณาลองใหม่อีกครั้ง";
+        const detailMatch = errorMessage.match(/\[\d+[^\]]*\]\s*([^[]+)/);
+        errorMessage = detailMatch
+          ? `เกิดข้อผิดพลาดจาก Google AI: ${detailMatch[1].trim()}`
+          : (error?.message || "เกิดข้อผิดพลาดในการเชื่อมต่อกับ Google AI กรุณาลองใหม่อีกครั้ง");
       }
     }
 

@@ -191,10 +191,10 @@ export async function analyzeFoodImage(
     );
   }
 
-  // Clean base64 string if it contains data URL prefix
-  const cleanBase64 = base64Data.includes(",")
+  // Clean base64 string: remove header, strip all whitespace/newlines
+  const cleanBase64 = (base64Data.includes(",")
     ? base64Data.split(",")[1]
-    : base64Data;
+    : base64Data).trim().replace(/\s+/g, "");
 
   const candidateModels = await getAvailableGeminiModels(apiKey);
   const genAI = new GoogleGenerativeAI(apiKey);
@@ -231,14 +231,15 @@ export async function analyzeFoodImage(
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
+          systemInstruction: systemInstruction,
           generationConfig: {
             responseMimeType: "application/json",
-            temperature: 0.15,
+            temperature: 1.0,
+            maxOutputTokens: 2048,
           },
         });
 
         const result = await model.generateContent([
-          systemInstruction,
           prompt,
           imagePart,
         ]);
