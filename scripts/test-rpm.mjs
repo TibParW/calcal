@@ -20,13 +20,13 @@ if (!apiKey) {
 const maskedKey = apiKey.slice(0, 6) + "••••" + apiKey.slice(-4);
 console.log(`\n🔍 เริ่มทดสอบขีดจำกัด Gemini API (RPM Test)`);
 console.log(`🔑 Key: ${maskedKey}`);
-console.log(`🎯 โมเดล: gemini-1.5-flash (Google Free Tier 15 RPM)`);
+console.log(`🎯 โมเดล: gemini-3.6-flash (Google Free Tier 15 RPM)`);
 console.log(`⏱️  กลไก: ส่งคำขอสั้นๆ ต่อเนื่อง 18 ครั้ง เพื่อดูจุดที่ Google ตัดรอบ 429\n`);
 console.log("─".repeat(65));
 
 async function sendTestRequest(index) {
   const start = Date.now();
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.6-flash:generateContent?key=${apiKey}`;
 
   const payload = {
     contents: [
