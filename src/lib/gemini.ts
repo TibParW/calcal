@@ -86,14 +86,11 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
   process.env.GEMINI_MODEL,
-  "gemini-3.8-flash",
-  "gemini-3.7-flash",
-  "gemini-3.6-flash",
-  "gemini-3.5-flash",
-  "gemini-3.5-flash-lite",
-  "gemini-2.5-flash",
   "gemini-2.0-flash",
   "gemini-1.5-flash",
+  "gemini-2.5-flash",
+  "gemini-2.0-flash-lite",
+  "gemini-1.5-pro",
 ].filter(Boolean) as string[];
 
 async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
@@ -150,12 +147,11 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
 
       // Sort with priority for stable standard flash versions first
       const priority = [
-        "gemini-3.6-flash",
-        "gemini-3.7-flash",
-        "gemini-3.5-flash",
-        "gemini-3.8-flash",
-        "gemini-flash-latest",
-        "gemini-2.5-flash-lite",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash-lite",
+        "gemini-1.5-pro",
       ];
       flashModels.sort((a, b) => {
         const idxA = priority.indexOf(a);
@@ -230,64 +226,66 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
-    for (const modelName of candidateModels) {
-    try {
-      const model = genAI.getGenerativeModel({
-        model: modelName,
-        generationConfig: {
-          responseMimeType: "application/json",
-          temperature: 0.15,
-        },
-      });
+    // Limit to top 2 candidate models to stay well within Vercel serverless execution limits
+    const modelsToTry = candidateModels.slice(0, 2);
 
-      const result = await model.generateContent([
-        systemInstruction,
-        prompt,
-        imagePart,
-      ]);
+    for (const modelName of modelsToTry) {
+      try {
+        const model = genAI.getGenerativeModel({
+          model: modelName,
+          generationConfig: {
+            responseMimeType: "application/json",
+            temperature: 0.15,
+          },
+        });
 
-      const response = await result.response;
-      rawText = response.text();
-      if (rawText && rawText.trim().length > 0) {
-        break; // Successfully got response
-      }
-    } catch (err: any) {
-      console.warn(`[Gemini API] Candidate model "${modelName}" failed:`, err?.message || err);
-      lastError = err;
+        const result = await model.generateContent([
+          systemInstruction,
+          prompt,
+          imagePart,
+        ]);
 
-      const msg = err?.message || "";
-      // If 404 (model retired/not found) or unsupported method, try next candidate
-      if (
-        msg.includes("404") ||
-        msg.includes("not found") ||
-        msg.includes("not supported") ||
-        err?.status === 404
-      ) {
-        continue;
-      }
+        const response = await result.response;
+        rawText = response.text();
+        if (rawText && rawText.trim().length > 0) {
+          break; // Successfully got response
+        }
+      } catch (err: any) {
+        console.warn(`[Gemini API] Candidate model "${modelName}" failed:`, err?.message || err);
+        lastError = err;
 
-      // If invalid API key, throw immediate user-friendly error
-      if (
-        msg.includes("API_KEY_INVALID") ||
-        msg.includes("API key not valid") ||
-        msg.includes("API_KEY_EXPIRED") ||
-        err?.status === 400
-      ) {
-        throw new Error("API_KEY_INVALID: Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
-      }
+        const msg = err?.message || "";
+        // If 404 (model retired/not found) or unsupported method, try next candidate
+        if (
+          msg.includes("404") ||
+          msg.includes("not found") ||
+          msg.includes("not supported") ||
+          err?.status === 404
+        ) {
+          continue;
+        }
 
-      // If quota exceeded (429), pause briefly and try next candidate model
-      if (
-        msg.includes("QUOTA_EXCEEDED") ||
-        msg.includes("RESOURCE_EXHAUSTED") ||
-        err?.status === 429
-      ) {
-        console.warn(`[Gemini API] Quota limit hit on "${modelName}", trying next candidate model in 1.2s...`);
-        await new Promise((resolve) => setTimeout(resolve, 1200));
-        continue;
+        // If invalid API key, throw immediate user-friendly error
+        if (
+          msg.includes("API_KEY_INVALID") ||
+          msg.includes("API key not valid") ||
+          msg.includes("API_KEY_EXPIRED") ||
+          err?.status === 400
+        ) {
+          throw new Error("API_KEY_INVALID: Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
+        }
+
+        // If quota exceeded (429), try next candidate without delay
+        if (
+          msg.includes("QUOTA_EXCEEDED") ||
+          msg.includes("RESOURCE_EXHAUSTED") ||
+          err?.status === 429
+        ) {
+          console.warn(`[Gemini API] Quota limit hit on "${modelName}", trying alternate candidate model...`);
+          continue;
+        }
       }
     }
-  }
 
   if (!rawText) {
     console.error("All Gemini candidate models failed. Last error:", lastError);

@@ -146,13 +146,38 @@ export default function HomePage() {
         }),
       });
 
-      const data = await response.json();
+      const rawText = await response.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        // Handle non-JSON server responses (e.g. 504 Gateway Timeout or 502/500 from Vercel)
+        if (response.status === 504 || response.status === 408) {
+          throw new Error(
+            lang === "en"
+              ? "Analysis timed out on server. Please tap 'Try Again' or use a smaller image."
+              : "การวิเคราะห์ใช้เวลานานเกินไป (Server Timeout) กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' ครับ"
+          );
+        }
+        if (response.status === 413) {
+          throw new Error(
+            lang === "en"
+              ? "Image file is too large. Please select a smaller photo."
+              : "ไฟล์รูปภาพมีขนาดใหญ่เกินไป กรุณาลดขนาดภาพหรือถ่ายใหม่ครับ"
+          );
+        }
+        throw new Error(
+          lang === "en"
+            ? `Server error (${response.status}). Please tap 'Try Again'.`
+            : `เซิร์ฟเวอร์ขัดข้องชั่วคราว (${response.status}) กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' ครับ`
+        );
+      }
 
       if (!response.ok) {
-        if (response.status === 429 || data.error?.includes("429") || data.error?.includes("โควตา")) {
+        if (response.status === 429 || data?.error?.includes("429") || data?.error?.includes("โควตา")) {
           recordApiCooldown(60);
         }
-        throw new Error(data.error || (lang === "en" ? "Error analyzing food image" : "เกิดข้อผิดพลาดในการวิเคราะห์อาหาร"));
+        throw new Error(data?.error || (lang === "en" ? "Error analyzing food image" : "เกิดข้อผิดพลาดในการวิเคราะห์อาหาร"));
       }
 
       setAnalysisResponse(data);
