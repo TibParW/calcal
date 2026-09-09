@@ -27,12 +27,12 @@ export async function POST(request: NextRequest) {
   }
 
   // Multi-model candidate list for live probe:
-  // Prioritizes ultra-fast lite models (<1s response) to avoid 503 high demand
+  // Prioritizes ultra-fast lite models (<1s response) with gemini-3.7-flash as powerhouse #2
   const probeModels = [
     "gemini-3.5-flash-lite",
-    "gemini-flash-lite-latest",
-    "gemini-3.5-flash",
     "gemini-3.7-flash",
+    "gemini-3.5-flash",
+    "gemini-flash-lite-latest",
     "gemini-3.1-flash-lite",
     "gemini-1.5-flash",
     "gemini-2.0-flash",

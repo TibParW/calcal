@@ -89,9 +89,9 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
   "gemini-3.5-flash-lite",
-  "gemini-flash-lite-latest",
-  "gemini-3.5-flash",
   "gemini-3.7-flash",
+  "gemini-3.5-flash",
+  "gemini-flash-lite-latest",
   "gemini-3.1-flash-lite",
   "gemini-1.5-flash",
   "gemini-2.0-flash",
@@ -151,12 +151,13 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
       const otherModels = validModels.filter((name: string) => !name.includes("flash"));
 
       // Reliable priority order with real Gemini production models (supporting both 3.x and legacy keys)
-      // gemini-3.5-flash-lite delivers sub-2-second speed with 0% congestion / timeout
+      // #1 gemini-3.5-flash-lite for ultra-fast 1-2s scans
+      // #2 gemini-3.7-flash as the supreme intelligence powerhouse
       const priority = [
         "gemini-3.5-flash-lite",
-        "gemini-flash-lite-latest",
-        "gemini-3.5-flash",
         "gemini-3.7-flash",
+        "gemini-3.5-flash",
+        "gemini-flash-lite-latest",
         "gemini-3.1-flash-lite",
         "gemini-1.5-flash",
         "gemini-1.5-flash-latest",
