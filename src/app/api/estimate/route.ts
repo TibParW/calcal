@@ -36,27 +36,31 @@ export async function POST(request: NextRequest) {
     const prompt = `คุณคือผู้เชี่ยวชาญด้านโภชนาการอาหาร หน้าที่ของคุณคือประมาณค่าพลังงานรวม (kcal) และสารอาหารหลัก (โปรตีน, คาร์บ, ไขมัน ในหน่วยกรัม) ของอาหารที่ระบุต่อไปนี้:
 "${query}"
 
-ข้อกำหนด:
+ข้อกำหนดสำคัญ:
 1. ตรวจสอบก่อนว่าข้อความนี้คือ "อาหาร/เครื่องดื่มที่มนุษย์บริโภคได้" หรือไม่
 2. หากข้อความ "ไม่ใช่ชื่ออาหาร", "เป็นสิ่งของทั่วไป", หรือ "เป็นตัวอักษรพิมพ์มั่ว" (เช่น asdf, กกกก, โต๊ะ, เก้าอี้, 12345) ให้ตอบกลับรูปแบบนี้ทันที:
 {
   "is_food": false,
   "error_message": "ไม่พบว่าเป็นชื่ออาหาร กรุณาระบุชื่อเมนูอาหารใหม่อีกครั้ง"
 }
-3. หากเป็นอาหารหรือเครื่องดื่ม ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving) หรือตามจำนวนที่ระบุ
-4. ปัดตัวเลขแคลอรีและสารอาหารเป็นจำนวนเต็มหรือทศนิยม 1 ตำแหน่ง
-5. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
+3. อาหารผสมหรือเซ็ตอาหาร (Combo Meals / Multi-item):
+   - หากผู้ใช้ระบุอาหารหลายอย่างในจานเดียวกันหรือทานคู่กัน เช่น "ไข่ดาว กระเพราหมู", "ข้าวกะเพราหมูสับ ไข่ดาว", "ข้าวผัดหมู + ไข่ต้ม", "สเต็กหมู เฟรนช์ฟรายส์ สลัด"
+   - ให้ "คำนวณพลังงาน (แคลอรี) และสารอาหารรวมของทุกอย่างเข้าด้วยกันทั้งหมด" อย่างถูกต้องตามจริง ห้ามเลือกคำนวณแค่อย่างใดอย่างหนึ่งเด็ดขาด (เช่น "ไข่ดาว กระเพราหมู" ต้องรวมทั้งข้าวกะเพราหมู ~550-600 kcal + ไข่ดาว ~120-150 kcal = ~670-750 kcal)
+   - ระบุ portion_description ให้ชัดเจนว่ารวมอะไรบ้าง เช่น "ข้าวกะเพราหมู 1 จาน + ไข่ดาว 1 ฟอง"
+4. หากเป็นอาหารหรือเครื่องดื่มเดี่ยว ให้คำนวณจากขนาดบริโภคมาตรฐาน 1 ที่ (Single Standard Serving) หรือตามจำนวนที่ระบุ
+5. ปัดตัวเลขแคลอรีเป็นจำนวนเต็ม และสารอาหารเป็นทศนิยม 1 ตำแหน่ง
+6. ตอบกลับเป็น JSON object เท่านั้นตามโครงสร้างนี้:
 {
   "is_food": true,
   "food_name": "${query}",
   "food_name_en": "Food Name English",
-  "calories": 120,
+  "calories": 720,
   "macronutrients": {
-    "protein_g": 1.3,
-    "carbs_g": 27,
-    "fat_g": 0.3
+    "protein_g": 26.5,
+    "carbs_g": 72,
+    "fat_g": 36
   },
-  "portion_description": "ขนาด 1 ที่ (~120g)"
+  "portion_description": "ข้าวกะเพราหมู 1 จาน + ไข่ดาว 1 ฟอง"
 }`;
 
     // 2-Step Cascade for Text Estimation:
@@ -73,7 +77,7 @@ export async function POST(request: NextRequest) {
 
     for (const modelName of fastModels) {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 4500);
 
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -84,7 +88,8 @@ export async function POST(request: NextRequest) {
           body: JSON.stringify({
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
-              temperature: 0.2,
+              responseMimeType: "application/json",
+              temperature: 1.0,
               maxOutputTokens: 1024,
             },
           }),
@@ -99,10 +104,30 @@ export async function POST(request: NextRequest) {
         }
 
         const data = await res.json();
-        let text = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        let text = "";
+        const parts = data.candidates?.[0]?.content?.parts || [];
+        for (const part of parts) {
+          if (part.text && !part.thought) {
+            text += part.text;
+          }
+        }
+        if (!text.trim()) {
+          for (const part of parts) {
+            if (part.text) {
+              text += part.text;
+            }
+          }
+        }
+        text = text.trim();
 
         if (text.startsWith("```")) {
-          text = text.replace(/^```(?:json)?\n?/, "").replace(/\n?```$/, "");
+          text = text.replace(/^```(?:json)?\s*\n?/, "").replace(/\n?\s*```$/, "").trim();
+        }
+
+        const firstBrace = text.indexOf("{");
+        const lastBrace = text.lastIndexOf("}");
+        if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
+          text = text.substring(firstBrace, lastBrace + 1);
         }
 
         const parsed = JSON.parse(text);

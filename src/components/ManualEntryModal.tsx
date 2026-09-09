@@ -42,7 +42,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
     setEstimateError(null);
     setEstimateHint(null);
 
-    // Hard safety timeout: under NO circumstances will this spin longer than 5 seconds
+    // Hard safety timeout: under NO circumstances will this spin longer than 9 seconds
     const safetyTimeout = setTimeout(() => {
       setIsEstimating(false);
       setEstimateError(
@@ -50,7 +50,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
           ? "Calculation took too long. Please enter manually or try again."
           : "การคำนวณใช้เวลานานเกินไป กรุณากรอกด้วยตนเอง หรือลองใหม่อีกครั้ง"
       );
-    }, 5000);
+    }, 9000);
 
     try {
       const settings = getUserSettings();

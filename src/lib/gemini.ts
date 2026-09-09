@@ -800,8 +800,7 @@ function tryOfflineNutritionWithQuantity(rawQuery: string): TextNutritionEstimat
           const cleanKey = key.toLowerCase();
           if (
             baseWord === cleanKey ||
-            cleanKey.includes(baseWord) ||
-            baseWord.includes(cleanKey)
+            cleanKey.replace(/\s+/g, "") === baseWord.replace(/\s+/g, "")
           ) {
             // Determine unit label
             const unit = val.portion_description.match(/(ลูก|ผล|ฟอง|ชิ้น|จาน|ทัพพี|แก้ว|ไม้|ถ้วย|ก้อน|ซอง|อัน)/)?.[0] || "ชิ้น";
@@ -844,9 +843,9 @@ export async function estimateNutritionFromText(
     return offlineMatch;
   }
 
-  // 2. Call server-side /api/estimate with strict 4.5s timeout (prevents long hangs and CORS issues)
+  // 2. Call server-side /api/estimate with 8s timeout (gives sufficient headroom for multi-model cascade)
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 4500);
+  const timeoutId = setTimeout(() => controller.abort(), 8000);
 
   try {
     const headers: Record<string, string> = {
@@ -882,14 +881,6 @@ export async function estimateNutritionFromText(
     };
   } catch (apiErr: any) {
     clearTimeout(timeoutId);
-
-    // If fetch failed, was aborted, or server error, check fuzzy match in offline dictionary
-    const lowerQuery = query.toLowerCase();
-    for (const [key, val] of Object.entries(QUICK_OFFLINE_NUTRITION)) {
-      if (lowerQuery.includes(key.toLowerCase()) || key.toLowerCase().includes(lowerQuery)) {
-        return val;
-      }
-    }
 
     if (apiErr.name === "AbortError" || apiErr.message?.includes("aborted")) {
       throw new Error("การคำนวณใช้เวลานานเกินไป กรุณากรอกด้วยตนเอง หรือลองใหม่อีกครั้ง");
