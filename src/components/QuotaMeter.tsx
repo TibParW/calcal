@@ -99,82 +99,117 @@ export const QuotaMeter: React.FC = () => {
 
   return (
     <div className="p-3.5 rounded-2xl bg-neutral-100/70 dark:bg-neutral-800/40 border border-neutral-200/60 dark:border-neutral-700/60 space-y-3">
-      {/* Header with Title & Live Status Badge */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-1.5">
-          <Gauge className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400" />
-          <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200">
+      {/* Header with Title & Action / Live Status */}
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <Gauge className="w-3.5 h-3.5 text-neutral-500 dark:text-neutral-400 shrink-0" />
+          <span className="text-xs font-semibold text-neutral-800 dark:text-neutral-200 truncate">
             {t("quota_title")}
           </span>
         </div>
 
-        {/* Live Status Badge */}
-        {inCooldown ? (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 flex items-center gap-1 animate-pulse">
-            <Clock className="w-2.5 h-2.5" />
-            <span>{t("quota_status_cooldown").replace("{sec}", String(cooldownSec))}</span>
-          </span>
-        ) : liveStatus?.ok === false ? (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 flex items-center gap-1">
-            <XCircle className="w-2.5 h-2.5" />
-            <span>{liveStatus.isDaily ? "โควตารายวันเต็ม" : liveStatus.isHighDemand ? "เซิร์ฟเวอร์หนาแน่น" : "Google บล็อก 429"}</span>
-          </span>
-        ) : isLowQuota ? (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 flex items-center gap-1">
-            <AlertTriangle className="w-2.5 h-2.5" />
-            <span>{t("quota_rpm_limit_warn")}</span>
-          </span>
-        ) : (
-          <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 flex items-center gap-1">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-            <span>{liveStatus?.ok ? `พร้อมใช้งาน (${liveStatus.latencyMs || 0}ms)` : t("quota_status_ready")}</span>
-          </span>
-        )}
-      </div>
-
-      {/* Real-time Google API Probe Button & Live Feedback */}
-      <div className="p-2.5 rounded-xl bg-white dark:bg-[#151518] border border-neutral-200/60 dark:border-neutral-700/60 space-y-2">
-        <div className="flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-neutral-700 dark:text-neutral-300 flex items-center gap-1">
-            <Zap className="w-3 h-3 text-amber-500" />
-            {lang === "en" ? "Check Real API Status" : "ตรวจสอบสถานะกับ Google AI จริง"}
-          </span>
+        <div className="flex items-center gap-1.5 shrink-0">
+          {/* Prominent Check API Button */}
           <button
             type="button"
             disabled={isProbing}
             onClick={handleProbeApi}
-            className="px-2.5 py-1 rounded-lg text-[10.5px] font-semibold bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 hover:bg-black transition active:scale-95 disabled:opacity-40 flex items-center gap-1 shadow-2xs"
+            className="px-2.5 py-1 rounded-full text-[10.5px] font-semibold bg-emerald-600 hover:bg-emerald-500 text-white dark:bg-emerald-600 dark:hover:bg-emerald-500 transition active:scale-95 disabled:opacity-50 flex items-center gap-1 shadow-xs cursor-pointer"
+            title="กดเพื่อส่งคำขอเช็คกับเซิร์ฟเวอร์ Google AI จริงแบบเรียลไทม์"
           >
             <RefreshCw className={`w-2.5 h-2.5 ${isProbing ? "animate-spin" : ""}`} />
-            <span>{isProbing ? (lang === "en" ? "Testing..." : "กำลังเช็ค...") : (lang === "en" ? "Test Now" : "ยิงทดสอบสด")}</span>
+            <span>{isProbing ? (lang === "en" ? "Checking..." : "กำลังเช็ค...") : (lang === "en" ? "⚡ Check API" : "⚡ เช็ค API")}</span>
+          </button>
+
+          {/* Live Status Badge (Clickable to re-test) */}
+          <button
+            type="button"
+            disabled={isProbing}
+            onClick={handleProbeApi}
+            title="คลิกเพื่อยิงทดสอบสถานะ Google AI"
+            className="cursor-pointer transition hover:opacity-80 active:scale-95"
+          >
+            {inCooldown ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 flex items-center gap-1 animate-pulse">
+                <Clock className="w-2.5 h-2.5" />
+                <span>{t("quota_status_cooldown").replace("{sec}", String(cooldownSec))}</span>
+              </span>
+            ) : liveStatus?.ok === false ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-rose-100 text-rose-700 dark:bg-rose-950/80 dark:text-rose-300 flex items-center gap-1">
+                <XCircle className="w-2.5 h-2.5" />
+                <span>{liveStatus.isDaily ? "โควตารายวันเต็ม" : liveStatus.isHighDemand ? "เซิร์ฟเวอร์หนาแน่น" : "Google บล็อก 429"}</span>
+              </span>
+            ) : isLowQuota ? (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-amber-100 text-amber-700 dark:bg-amber-950/80 dark:text-amber-300 flex items-center gap-1">
+                <AlertTriangle className="w-2.5 h-2.5" />
+                <span>{t("quota_rpm_limit_warn")}</span>
+              </span>
+            ) : (
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-emerald-100 text-emerald-700 dark:bg-emerald-950/80 dark:text-emerald-300 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                <span>{liveStatus?.ok ? `พร้อม (${liveStatus.latencyMs || 0}ms)` : t("quota_status_ready")}</span>
+              </span>
+            )}
           </button>
         </div>
+      </div>
 
-        {liveStatus ? (
-          <div className="text-[10.5px] leading-relaxed flex items-start gap-1.5 pt-0.5">
+      {/* Real-time Google API Live Feedback Card */}
+      {liveStatus ? (
+        <div className="p-2.5 rounded-xl bg-white dark:bg-[#151518] border border-neutral-200/60 dark:border-neutral-700/60">
+          <div className="text-[10.5px] leading-relaxed flex items-start gap-2">
             {liveStatus.ok ? (
               <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
             ) : (
               <AlertTriangle className="w-3.5 h-3.5 text-rose-500 shrink-0 mt-0.5" />
             )}
-            <div className="flex-1">
-              <p className={`font-medium ${liveStatus.ok ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+            <div className="flex-1 min-w-0">
+              <div className="flex items-center justify-between gap-1">
+                <p className={`font-semibold ${liveStatus.ok ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400"}`}>
+                  {liveStatus.ok
+                    ? (lang === "en" ? "Google AI is Ready" : "Google AI พร้อมใช้งานจริง")
+                    : (lang === "en" ? "Google AI Notice" : "Google AI แจ้งสถานะ")}
+                </p>
+                {liveStatus.latencyMs !== undefined && (
+                  <span className="font-mono text-[9.5px] px-1.5 py-0.5 rounded bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400">
+                    Ping {liveStatus.latencyMs} ms
+                  </span>
+                )}
+              </div>
+              <p className="text-[10px] text-neutral-600 dark:text-neutral-300 mt-0.5 leading-snug">
                 {liveStatus.message}
               </p>
-              <div className="flex items-center justify-between text-[10px] text-neutral-400 dark:text-neutral-500 mt-0.5">
-                <span>ทดสอบเมื่อ: {liveStatus.testedAt || "-"}</span>
-                {liveStatus.latencyMs !== undefined && <span>ความเร็ว: {liveStatus.latencyMs} ms</span>}
+              <div className="flex items-center justify-between text-[9.5px] text-neutral-400 dark:text-neutral-500 mt-1">
+                <span>{lang === "en" ? "Tested at:" : "ทดสอบสดเมื่อ:"} {liveStatus.testedAt || "-"}</span>
+                <button
+                  type="button"
+                  disabled={isProbing}
+                  onClick={handleProbeApi}
+                  className="text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer flex items-center gap-0.5"
+                >
+                  <RefreshCw className={`w-2 h-2 ${isProbing ? "animate-spin" : ""}`} />
+                  <span>{lang === "en" ? "Test again" : "ทดสอบซ้ำ"}</span>
+                </button>
               </div>
             </div>
           </div>
-        ) : (
-          <p className="text-[10px] text-neutral-400 dark:text-neutral-500">
-            {lang === "en"
-              ? "Press 'Test Now' to send an actual live ping to Google Gemini API."
-              : "กด 'ยิงทดสอบสด' เพื่อส่งคำขอเช็คกับเซิร์ฟเวอร์ Google AI โดยตรงแบบเรียลไทม์"}
-          </p>
-        )}
-      </div>
+        </div>
+      ) : (
+        <div className="p-2.5 rounded-xl bg-white/70 dark:bg-[#151518]/70 border border-dashed border-neutral-300 dark:border-neutral-700/80 flex items-center justify-between gap-2 text-[10.5px]">
+          <span className="text-neutral-500 dark:text-neutral-400 flex items-center gap-1">
+            <Zap className="w-3 h-3 text-amber-500 shrink-0" />
+            {lang === "en" ? "Click 'Check API' to probe Google AI live" : "กดปุ่ม '⚡ เช็ค API' ด้านบนเพื่อเช็คกับ Google AI สดๆ"}
+          </span>
+          <button
+            type="button"
+            disabled={isProbing}
+            onClick={handleProbeApi}
+            className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 hover:underline cursor-pointer shrink-0"
+          >
+            {lang === "en" ? "Test now" : "ทดสอบเลย"}
+          </button>
+        </div>
+      )}
 
       {/* 1. RPM Progress Bar (Remaining scans countdown) */}
       <div className="space-y-1.5">
