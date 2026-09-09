@@ -103,13 +103,14 @@ export async function analyzeFoodImage(
 
   const genAI = new GoogleGenerativeAI(apiKey);
 
-  const model = genAI.getGenerativeModel({
-    model: "gemini-1.5-flash",
-    generationConfig: {
-      responseMimeType: "application/json",
-      temperature: 0.15,
-    },
-  });
+  const CANDIDATE_MODELS = [
+    process.env.GEMINI_MODEL,
+    "gemini-2.5-flash",
+    "gemini-2.0-flash",
+    "gemini-2.5-flash-lite",
+    "gemini-1.5-flash-latest",
+    "gemini-1.5-flash",
+  ].filter(Boolean) as string[];
 
   const systemInstruction =
     scanMode === "nutrition_label"
@@ -133,14 +134,80 @@ export async function analyzeFoodImage(
   };
 
   try {
-    const result = await model.generateContent([
-      systemInstruction,
-      prompt,
-      imagePart,
-    ]);
+    let rawText = "";
+    let lastError: any = null;
 
-    const response = await result.response;
-    const text = response.text();
+  for (const modelName of CANDIDATE_MODELS) {
+    try {
+      const model = genAI.getGenerativeModel({
+        model: modelName,
+        generationConfig: {
+          responseMimeType: "application/json",
+          temperature: 0.15,
+        },
+      });
+
+      const result = await model.generateContent([
+        systemInstruction,
+        prompt,
+        imagePart,
+      ]);
+
+      const response = await result.response;
+      rawText = response.text();
+      if (rawText && rawText.trim().length > 0) {
+        break; // Successfully got response
+      }
+    } catch (err: any) {
+      console.warn(`[Gemini API] Candidate model "${modelName}" failed:`, err?.message || err);
+      lastError = err;
+
+      const msg = err?.message || "";
+      // If 404 (model retired/not found) or unsupported method, try next candidate
+      if (
+        msg.includes("404") ||
+        msg.includes("not found") ||
+        msg.includes("not supported") ||
+        err?.status === 404
+      ) {
+        continue;
+      }
+
+      // If invalid API key, throw immediate user-friendly error
+      if (
+        msg.includes("API_KEY_INVALID") ||
+        msg.includes("API key not valid") ||
+        msg.includes("API_KEY_EXPIRED") ||
+        err?.status === 400
+      ) {
+        throw new Error("Gemini API Key ไม่ถูกต้องหรือหมดอายุ กรุณาตรวจสอบ API Key ในหน้าตั้งค่า");
+      }
+
+      // If quota exceeded, throw immediate user-friendly error
+      if (
+        msg.includes("QUOTA_EXCEEDED") ||
+        msg.includes("RESOURCE_EXHAUSTED") ||
+        err?.status === 429
+      ) {
+        throw new Error("โควตา Gemini API เต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ API Key ส่วนตัวในหน้าตั้งค่า");
+      }
+    }
+  }
+
+  if (!rawText) {
+    console.error("All Gemini candidate models failed. Last error:", lastError);
+    if (
+      lastError?.message?.includes("404") ||
+      lastError?.message?.includes("not found")
+    ) {
+      throw new Error(
+        "ไม่พบโมเดล Gemini ที่รองรับบน API Key นี้ กรุณาตรวจสอบสถานะ API Key ใน Google AI Studio"
+      );
+    }
+    throw lastError || new Error("เกิดข้อผิดพลาดในการประมวลผลรูปภาพอาหารด้วย AI กรุณาลองใหม่อีกครั้ง");
+  }
+
+  const text = rawText;
 
     // Clean potential markdown wrap if any (e.g. ```json ... ```)
     let cleanJson = text.trim();
