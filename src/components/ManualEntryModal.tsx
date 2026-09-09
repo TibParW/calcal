@@ -76,7 +76,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
 
     onSave({
       food_name: foodName.trim(),
-      calories: Number(calories),
+      calories: Math.round(Number(calories)),
       macronutrients: {
         protein_g: Number(protein) || 0,
         carbs_g: Number(carbs) || 0,
@@ -187,6 +187,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
               </label>
               <input
                 type="number"
+                step="any"
                 required
                 min="0"
                 value={calories}
@@ -216,6 +217,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
             <div className="grid grid-cols-3 gap-2">
               <input
                 type="number"
+                step="any"
                 min="0"
                 value={protein}
                 onChange={(e) => setProtein(e.target.value === "" ? "" : Number(e.target.value))}
@@ -224,6 +226,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
               />
               <input
                 type="number"
+                step="any"
                 min="0"
                 value={carbs}
                 onChange={(e) => setCarbs(e.target.value === "" ? "" : Number(e.target.value))}
@@ -232,6 +235,7 @@ export const ManualEntryModal: React.FC<ManualEntryModalProps> = ({
               />
               <input
                 type="number"
+                step="any"
                 min="0"
                 value={fat}
                 onChange={(e) => setFat(e.target.value === "" ? "" : Number(e.target.value))}
