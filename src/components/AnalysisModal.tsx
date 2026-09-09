@@ -217,10 +217,15 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
   const isNutritionMode = scanMode === "nutrition_label";
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200">
-      <div className="w-full max-w-md bg-white dark:bg-[#121215] rounded-t-3xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[92vh] border border-neutral-200/60 dark:border-neutral-800/60">
+    <div
+      className="fixed inset-0 z-50 flex flex-col justify-end sm:justify-center items-center p-0 pt-14 sm:p-4 bg-black/40 backdrop-blur-sm animate-in fade-in duration-200"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) onClose();
+      }}
+    >
+      <div className="w-full max-w-md bg-white dark:bg-[#121215] rounded-t-3xl sm:rounded-3xl shadow-xl overflow-hidden flex flex-col max-h-[calc(100dvh-4rem)] sm:max-h-[85vh] border border-neutral-200/60 dark:border-neutral-800/60">
         {/* Header */}
-        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+        <div className="px-5 py-3.5 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-1.5">
             <span className="font-semibold text-sm text-neutral-900 dark:text-neutral-100">
               {isLoading
@@ -242,7 +247,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
           <button
             onClick={onClose}
             aria-label="Close"
-            className="w-7 h-7 rounded-full flex items-center justify-center text-neutral-400 hover:text-neutral-700 dark:hover:text-white transition"
+            className="w-8 h-8 rounded-full flex items-center justify-center text-neutral-500 hover:text-neutral-900 dark:text-neutral-400 dark:hover:text-white bg-neutral-100 dark:bg-neutral-800 transition active:scale-95"
           >
             <X className="w-4 h-4" />
           </button>
@@ -527,7 +532,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
         </div>
 
         {/* Footer Actions */}
-        <div className="p-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2">
+        <div className="p-4 border-t border-neutral-100 dark:border-neutral-800 flex items-center gap-2 shrink-0">
           {error && !isLoading ? (
             <>
               <button
