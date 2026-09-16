@@ -6,6 +6,11 @@ import {
   ExternalLink,
   Sun,
   Moon,
+  Cloud,
+  LogOut,
+  CheckCircle2,
+  Loader2,
+  RefreshCw,
 } from "lucide-react";
 import {
   clearAllData,
@@ -14,6 +19,7 @@ import {
 } from "@/lib/storage";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
+import { useAuth } from "@/context/AuthContext";
 import { QuotaMeter } from "./QuotaMeter";
 
 interface SettingsModalProps {
@@ -35,6 +41,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const { lang, setLang, t } = useLanguage();
   const { theme, setTheme } = useTheme();
+  const { user, isSyncing, lastSyncTime, loginWithGoogle, logout, syncNow } = useAuth();
   const [dailyGoal, setDailyGoal] = useState(settings.daily_goal || 2000);
   const [proteinGoal, setProteinGoal] = useState(settings.protein_goal_g || 100);
   const [carbsGoal, setCarbsGoal] = useState(settings.carbs_goal_g || 250);
@@ -126,6 +133,97 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
         {/* Body */}
         <div className="overflow-y-auto p-5 space-y-6 flex-1 text-xs">
+          {/* Account & Cloud Sync */}
+          <div className="p-3.5 rounded-2xl bg-neutral-50 dark:bg-neutral-900/60 border border-neutral-200/70 dark:border-neutral-800 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
+                {t("cloud_sync_title")}
+              </span>
+              {user ? (
+                <span className="inline-flex items-center gap-1 text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {t("cloud_synced_badge")}
+                </span>
+              ) : (
+                <span className="text-[10px] text-neutral-400">
+                  {t("cloud_guest_badge")}
+                </span>
+              )}
+            </div>
+
+            {user ? (
+              <div className="space-y-2.5">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    {user.photoURL ? (
+                      <img
+                        src={user.photoURL}
+                        alt="User"
+                        className="w-8 h-8 rounded-full object-cover border border-neutral-200 dark:border-neutral-700"
+                      />
+                    ) : (
+                      <div className="w-8 h-8 rounded-full bg-emerald-100 dark:bg-emerald-950/60 flex items-center justify-center text-emerald-600 font-bold text-xs">
+                        {user.displayName?.[0] || "U"}
+                      </div>
+                    )}
+                    <div>
+                      <span className="font-semibold text-xs text-neutral-900 dark:text-white block">
+                        {user.displayName || "Google User"}
+                      </span>
+                      <span className="text-[10px] text-neutral-400 block truncate max-w-[180px]">
+                        {user.email}
+                      </span>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="flex items-center gap-1 px-2.5 py-1 text-[11px] text-neutral-500 hover:text-rose-500 dark:text-neutral-400 dark:hover:text-rose-400 transition"
+                  >
+                    <LogOut className="w-3 h-3" />
+                    <span>{t("cloud_logout_btn")}</span>
+                  </button>
+                </div>
+
+                <div className="flex items-center justify-between pt-1 text-[10px] text-neutral-400 border-t border-neutral-200/50 dark:border-neutral-800/60">
+                  <span>
+                    {lastSyncTime
+                      ? `${t("cloud_last_synced")} ${lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`
+                      : "Firebase Firestore"}
+                  </span>
+                  <button
+                    type="button"
+                    disabled={isSyncing}
+                    onClick={syncNow}
+                    className="text-emerald-600 dark:text-emerald-400 hover:underline flex items-center gap-1"
+                  >
+                    {isSyncing ? (
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                    ) : (
+                      <RefreshCw className="w-3 h-3" />
+                    )}
+                    <span>{isSyncing ? t("cloud_syncing") : t("cloud_sync_now")}</span>
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div className="space-y-2.5">
+                <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+                  {t("cloud_sync_desc")}
+                </p>
+                <button
+                  type="button"
+                  onClick={loginWithGoogle}
+                  className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium text-xs flex items-center justify-center gap-2 transition active:scale-98 shadow-xs"
+                >
+                  <Cloud className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
+                  <span>{t("cloud_sync_btn")}</span>
+                </button>
+              </div>
+            )}
+          </div>
+
           {/* Calorie Target */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">

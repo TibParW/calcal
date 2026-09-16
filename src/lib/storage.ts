@@ -1,4 +1,10 @@
 import { FoodLogItem, UserSettings, DailySummary, StorageUsageInfo, ApiQuotaUsage } from "@/types";
+import {
+  auth,
+  saveFoodLogToCloud,
+  deleteFoodLogFromCloud,
+  saveUserSettingsToCloud,
+} from "@/lib/firebase";
 
 const LOGS_STORAGE_KEY = "CALCAL_FOOD_LOGS_V1";
 const SETTINGS_STORAGE_KEY = "CALCAL_USER_SETTINGS_V1";
@@ -184,6 +190,14 @@ export function addFoodLog(item: Omit<FoodLogItem, "id" | "createdAt">): FoodLog
   };
   all.push(newItem);
   saveFoodLogs(all);
+
+  // Background Cloud Sync if user is authenticated
+  if (typeof window !== "undefined" && auth && auth.currentUser) {
+    saveFoodLogToCloud(auth.currentUser.uid, newItem).catch((e) =>
+      console.warn("[storage] Background cloud save error:", e)
+    );
+  }
+
   return newItem;
 }
 
@@ -191,6 +205,13 @@ export function deleteFoodLog(id: string): void {
   const all = getFoodLogs();
   const filtered = all.filter((item) => item.id !== id);
   saveFoodLogs(filtered);
+
+  // Background Cloud Sync delete if user is authenticated
+  if (typeof window !== "undefined" && auth && auth.currentUser) {
+    deleteFoodLogFromCloud(auth.currentUser.uid, id).catch((e) =>
+      console.warn("[storage] Background cloud delete error:", e)
+    );
+  }
 }
 
 export function getUserSettings(): UserSettings {
@@ -209,6 +230,14 @@ export function saveUserSettings(settings: Partial<UserSettings>): UserSettings 
     const current = getUserSettings();
     const updated = { ...current, ...settings };
     safeSetItem(SETTINGS_STORAGE_KEY, JSON.stringify(updated));
+
+    // Background Cloud Sync settings if user is authenticated
+    if (typeof window !== "undefined" && auth && auth.currentUser) {
+      saveUserSettingsToCloud(auth.currentUser.uid, updated).catch((e) =>
+        console.warn("[storage] Background cloud settings save error:", e)
+      );
+    }
+
     return updated;
   } catch (err) {
     console.error("Failed to save user settings", err);

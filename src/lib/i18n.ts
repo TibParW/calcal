@@ -134,6 +134,17 @@ export const translations = {
     theme_dark: "มืด",
     theme_toggle: "สลับโหมดมืด/สว่าง",
 
+    // Cloud Sync & Auth
+    cloud_sync_title: "สำรองข้อมูลบน Cloud (Google)",
+    cloud_sync_desc: "เชื่อมต่อบัญชี Google เพื่อป้องกันข้อมูลสูญหาย และเปิดดูประวัติอาหารได้จากทุกเครื่อง",
+    cloud_sync_btn: "เข้าสู่ระบบด้วย Google",
+    cloud_synced_badge: "ซิงค์กับ Google Cloud แล้ว",
+    cloud_syncing: "กำลังซิงค์...",
+    cloud_sync_now: "ซิงค์ข้อมูลตอนนี้",
+    cloud_logout_btn: "ออกจากระบบ",
+    cloud_guest_badge: "บันทึกเฉพาะในเครื่อง (Guest)",
+    cloud_last_synced: "ซิงค์ล่าสุดเมื่อ",
+
     // TDEE Modal
     tdee_title: "คำนวณเป้าหมายส่วนบุคคล",
     tdee_subtitle: "สูตรมาตรฐาน Mifflin-St Jeor คำนวณพลังงานที่เหมาะสมกับร่างกายคุณ",
@@ -305,6 +316,17 @@ export const translations = {
     theme_light: "Light",
     theme_dark: "Dark",
     theme_toggle: "Toggle dark/light mode",
+
+    // Cloud Sync & Auth
+    cloud_sync_title: "Cloud Backup (Google)",
+    cloud_sync_desc: "Sign in with Google to prevent data loss and access your food logs from any device.",
+    cloud_sync_btn: "Sign in with Google",
+    cloud_synced_badge: "Synced with Google Cloud",
+    cloud_syncing: "Syncing...",
+    cloud_sync_now: "Sync Now",
+    cloud_logout_btn: "Sign Out",
+    cloud_guest_badge: "Local only (Guest)",
+    cloud_last_synced: "Last synced at",
 
     // TDEE Modal
     tdee_title: "Personal Goal Calculator",

@@ -38,6 +38,7 @@ import { useLanguage } from "@/context/LanguageContext";
 export default function HomePage() {
   const { lang, t } = useLanguage();
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
+  const isHistoricalViewRef = React.useRef<boolean>(false);
   const [logs, setLogs] = useState<FoodLogItem[]>([]);
   const [settings, setSettings] = useState<UserSettings>({
     daily_goal: 2000,
@@ -46,6 +47,12 @@ export default function HomePage() {
     fat_goal_g: 65,
     storage_mode: "ultra_light",
   });
+
+  const handleSelectDate = (newDate: string) => {
+    setSelectedDate(newDate);
+    // If the user selects something other than today, mark as historical view so we don't boot them out
+    isHistoricalViewRef.current = newDate !== getLocalDateString();
+  };
 
   // Modal states
   const [isAnalysisModalOpen, setIsAnalysisModalOpen] = useState(false);
@@ -80,7 +87,8 @@ export default function HomePage() {
   useEffect(() => {
     const handleWakeOrFocus = () => {
       const today = getLocalDateString();
-      if (selectedDate !== today && selectedDate < today) {
+      // Only roll over to today if the user was NOT intentionally viewing a past historical date
+      if (!isHistoricalViewRef.current && selectedDate !== today) {
         setSelectedDate(today);
       }
       refreshData();
@@ -93,10 +101,18 @@ export default function HomePage() {
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
+
+    // Listen to Firebase cloud data sync events
+    const handleCloudSync = () => {
+      refreshData();
+    };
+    window.addEventListener("calcal_data_synced", handleCloudSync);
+
     const interval = setInterval(handleWakeOrFocus, 60000); // check every minute
     return () => {
       window.removeEventListener("focus", handleWakeOrFocus);
       document.removeEventListener("visibilitychange", handleVisibility);
+      window.removeEventListener("calcal_data_synced", handleCloudSync);
       clearInterval(interval);
     };
   }, [selectedDate, refreshData]);
@@ -284,7 +300,7 @@ export default function HomePage() {
         {/* Date Navigator */}
         <DateNavigator
           currentDate={selectedDate}
-          onSelectDate={(newDate) => setSelectedDate(newDate)}
+          onSelectDate={handleSelectDate}
         />
 
         {/* Calorie Ring summary */}
@@ -399,7 +415,7 @@ export default function HomePage() {
       <HistoryModal
         isOpen={isHistoryModalOpen}
         onClose={() => setIsHistoryModalOpen(false)}
-        onSelectDate={(newDate) => setSelectedDate(newDate)}
+        onSelectDate={handleSelectDate}
         settings={settings}
       />
 
