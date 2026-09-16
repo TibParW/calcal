@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import React, {
   createContext,
@@ -12,6 +12,7 @@ import {
   subscribeToAuth,
   loginWithGoogle as fbLoginWithGoogle,
   logoutUser as fbLogoutUser,
+  checkRedirectResult,
   fetchFoodLogsFromCloud,
   batchUploadFoodLogsToCloud,
   fetchUserSettingsFromCloud,
@@ -135,6 +136,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, []);
 
   useEffect(() => {
+    // Check if coming back from redirect login (e.g. mobile)
+    checkRedirectResult()
+      .then(async (redirectUser) => {
+        if (redirectUser) {
+          setUser(redirectUser);
+          await performSync(redirectUser);
+        }
+      })
+      .catch((err) => console.warn("[auth] Redirect error:", err));
+
     const unsubscribe = subscribeToAuth(async (currentUser) => {
       setUser(currentUser);
       setLoading(false);
@@ -154,11 +165,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     setLoading(true);
     try {
       const loggedUser = await fbLoginWithGoogle();
-      setUser(loggedUser);
-      await performSync(loggedUser);
+      if (loggedUser) {
+        setUser(loggedUser);
+        await performSync(loggedUser);
+      }
     } catch (err: any) {
       console.error("[auth] Google login error:", err);
-      throw err;
+      if (err?.code === "auth/unauthorized-domain") {
+        const domain =
+          typeof window !== "undefined" ? window.location.hostname : "";
+        alert(
+          `⚠️ โดเมน "${domain}" ยังไม่ได้รับอนุญาตใน Firebase Authentication\n\nวิธีเปิดให้ใช้งานได้ (ทำเพียงครั้งเดียว):\n1. ไปที่ Firebase Console > Authentication > Settings\n2. เลื่อนลงมาที่หัวข้อ "Authorized domains"\n3. กดปุ่ม "Add domain" แล้วใส่: ${domain}\n4. กดบันทึก แล้วกลับมากดล็อกอินใหม่อีกครั้งครับ`
+        );
+      } else if (err?.code === "auth/popup-closed-by-user") {
+        // User closed the popup, silently ignore
+      } else {
+        alert(err?.message || "ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง");
+      }
     } finally {
       setLoading(false);
     }
