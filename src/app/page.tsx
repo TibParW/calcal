@@ -22,18 +22,37 @@ import {
 } from "@/lib/storage";
 import { compressImageForAnalysis, createThumbnail } from "@/lib/imageUtils";
 
+import dynamic from "next/dynamic";
+
 import { Navbar } from "@/components/Navbar";
 import { DateNavigator } from "@/components/DateNavigator";
 import { CalorieRing } from "@/components/CalorieRing";
 import { MacroBar } from "@/components/MacroBar";
 import { CameraAction } from "@/components/CameraAction";
 import { FoodList } from "@/components/FoodList";
-import { AnalysisModal } from "@/components/AnalysisModal";
-import { ManualEntryModal } from "@/components/ManualEntryModal";
-import { SettingsModal } from "@/components/SettingsModal";
-import { HistoryModal } from "@/components/HistoryModal";
-import { TdeeModal } from "@/components/TdeeModal";
 import { useLanguage } from "@/context/LanguageContext";
+
+// Dynamic Code Splitting for heavy modals (Optimizes initial bundle size and speeds up first paint)
+const AnalysisModal = dynamic(
+  () => import("@/components/AnalysisModal").then((mod) => mod.AnalysisModal),
+  { ssr: false }
+);
+const ManualEntryModal = dynamic(
+  () => import("@/components/ManualEntryModal").then((mod) => mod.ManualEntryModal),
+  { ssr: false }
+);
+const SettingsModal = dynamic(
+  () => import("@/components/SettingsModal").then((mod) => mod.SettingsModal),
+  { ssr: false }
+);
+const HistoryModal = dynamic(
+  () => import("@/components/HistoryModal").then((mod) => mod.HistoryModal),
+  { ssr: false }
+);
+const TdeeModal = dynamic(
+  () => import("@/components/TdeeModal").then((mod) => mod.TdeeModal),
+  { ssr: false }
+);
 
 export default function HomePage() {
   const { lang, t } = useLanguage();
@@ -337,7 +356,7 @@ export default function HomePage() {
 
       {/* Minimal Footer */}
       <footer className="w-full max-w-sm sm:max-w-md mx-auto px-4 py-6 text-center text-[11px] text-neutral-400">
-        <p>{t("tagline")}</p>
+        <p>{t("tagline")} • v1.1.0</p>
       </footer>
 
       {/* AI Analysis Modal */}

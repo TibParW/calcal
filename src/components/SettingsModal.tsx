@@ -473,6 +473,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </button>
             )}
           </div>
+
+          {/* App Version Info */}
+          <div className="pt-3 pb-1 text-center text-neutral-400 dark:text-neutral-500 text-[11px] border-t border-neutral-100 dark:border-neutral-800">
+            <span className="font-medium">calCal v1.1.0</span>
+            <span className="mx-1.5">•</span>
+            <span>Next.js & Firebase Cloud</span>
+          </div>
         </div>
 
         {/* Footer */}
