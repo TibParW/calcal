@@ -162,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   }, [performSync]);
 
   const loginWithGoogle = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       const loggedUser = await fbLoginWithGoogle();
@@ -177,8 +178,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         alert(
           `⚠️ โดเมน "${domain}" ยังไม่ได้รับอนุญาตใน Firebase Authentication\n\nวิธีเปิดให้ใช้งานได้ (ทำเพียงครั้งเดียว):\n1. ไปที่ Firebase Console > Authentication > Settings\n2. เลื่อนลงมาที่หัวข้อ "Authorized domains"\n3. กดปุ่ม "Add domain" แล้วใส่: ${domain}\n4. กดบันทึก แล้วกลับมากดล็อกอินใหม่อีกครั้งครับ`
         );
-      } else if (err?.code === "auth/popup-closed-by-user") {
-        // User closed the popup, silently ignore
+      } else if (
+        err?.code === "auth/popup-closed-by-user" ||
+        err?.code === "auth/cancelled-popup-request"
+      ) {
+        // User cancelled, closed popup, or second tap superseded: silently ignore
       } else {
         alert(err?.message || "ไม่สามารถเข้าสู่ระบบได้ กรุณาลองใหม่อีกครั้ง");
       }

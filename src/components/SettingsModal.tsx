@@ -41,7 +41,8 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 }) => {
   const { lang, setLang, t } = useLanguage();
   const { theme, setTheme } = useTheme();
-  const { user, isSyncing, lastSyncTime, loginWithGoogle, logout, syncNow } = useAuth();
+  const { user, loading, isSyncing, lastSyncTime, loginWithGoogle, logout, syncNow } = useAuth();
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [dailyGoal, setDailyGoal] = useState(settings.daily_goal || 2000);
   const [proteinGoal, setProteinGoal] = useState(settings.protein_goal_g || 100);
   const [carbsGoal, setCarbsGoal] = useState(settings.carbs_goal_g || 250);
@@ -63,6 +64,13 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
   const refreshStorage = () => {
     setStorageInfo(getStorageUsageInfo());
   };
+
+  useEffect(() => {
+    if (typeof navigator !== "undefined") {
+      const ua = navigator.userAgent || "";
+      setIsInAppBrowser(/Line|FBAN|FBAV|Instagram|Messenger/i.test(ua));
+    }
+  }, []);
 
   useEffect(() => {
     if (isOpen) {
@@ -209,16 +217,41 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               </div>
             ) : (
               <div className="space-y-2.5">
+                {isInAppBrowser && (
+                  <div className="p-2.5 rounded-xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200/70 dark:border-amber-800/70 text-amber-800 dark:text-amber-200 text-[11px] space-y-2">
+                    <div className="flex items-center gap-1.5 font-semibold text-amber-900 dark:text-amber-100">
+                      <span>💡 กำลังเปิดในแอปแชท (LINE / Messenger)</span>
+                    </div>
+                    <p className="text-[10px] leading-relaxed opacity-90">
+                      Google ไม่อนุญาตให้ล็อกอินในแอปแชท แนะนำให้เปิดด้วย Safari หรือ Chrome เพื่อเข้าสู่ระบบครับ
+                    </p>
+                    <a
+                      href="https://calcal-lime.vercel.app/?openExternalBrowser=1"
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center justify-center gap-1.5 w-full py-2 px-3 rounded-lg bg-amber-500 hover:bg-amber-600 text-slate-950 font-bold text-xs transition active:scale-95 shadow-2xs"
+                    >
+                      <ExternalLink className="w-3.5 h-3.5" />
+                      <span>เปิดใน Safari / Chrome ทันที</span>
+                    </a>
+                  </div>
+                )}
+
                 <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
                   {t("cloud_sync_desc")}
                 </p>
                 <button
                   type="button"
+                  disabled={loading || isSyncing}
                   onClick={loginWithGoogle}
-                  className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium text-xs flex items-center justify-center gap-2 transition active:scale-98 shadow-xs"
+                  className="w-full py-2.5 px-3 rounded-xl bg-neutral-900 text-white dark:bg-white dark:text-neutral-900 font-medium text-xs flex items-center justify-center gap-2 transition active:scale-98 shadow-xs disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <Cloud className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
-                  <span>{t("cloud_sync_btn")}</span>
+                  {loading ? (
+                    <Loader2 className="w-4 h-4 animate-spin text-emerald-400 dark:text-emerald-600" />
+                  ) : (
+                    <Cloud className="w-4 h-4 text-emerald-400 dark:text-emerald-600" />
+                  )}
+                  <span>{loading ? (lang === "en" ? "Connecting..." : "กำลังเชื่อมต่อ...") : t("cloud_sync_btn")}</span>
                 </button>
               </div>
             )}

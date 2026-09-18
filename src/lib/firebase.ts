@@ -63,9 +63,16 @@ export async function loginWithGoogle(): Promise<User | null> {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
   } catch (err: any) {
-    if (err?.code === "auth/popup-blocked") {
-      await signInWithRedirect(auth, googleProvider);
-      return null;
+    if (
+      err?.code === "auth/popup-blocked" ||
+      err?.code === "auth/cancelled-popup-request"
+    ) {
+      try {
+        await signInWithRedirect(auth, googleProvider);
+        return null;
+      } catch (redirectErr) {
+        console.warn("[firebase] Redirect fallback error:", redirectErr);
+      }
     }
     throw err;
   }
