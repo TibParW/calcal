@@ -16,6 +16,7 @@ import {
   clearAllData,
   getStorageUsageInfo,
   stripOldThumbnails,
+  saveUserSettings,
 } from "@/lib/storage";
 import { useLanguage } from "@/context/LanguageContext";
 import { useTheme } from "@/context/ThemeContext";
@@ -452,7 +453,12 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
             <input
               type="password"
               value={apiKey}
-              onChange={(e) => setApiKey(e.target.value)}
+              onChange={(e) => {
+                const val = e.target.value;
+                setApiKey(val);
+                // Auto-save key to storage so probing and background sync always have it
+                saveUserSettings({ gemini_api_key: val.trim() });
+              }}
               placeholder="AIzaSy..."
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-900 dark:text-white font-mono text-xs focus:outline-none focus:border-neutral-400"
             />
@@ -468,7 +474,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
             {/* Quota Progress Bar */}
             <div className="pt-2">
-              <QuotaMeter />
+              <QuotaMeter customApiKey={apiKey} />
             </div>
           </div>
 

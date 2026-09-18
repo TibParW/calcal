@@ -4,7 +4,11 @@ import { getApiQuotaUsage, getLastApiStatus, saveLastApiStatus, clearApiCooldown
 import { ApiQuotaUsage } from "@/types";
 import { useLanguage } from "@/context/LanguageContext";
 
-export const QuotaMeter: React.FC = () => {
+interface QuotaMeterProps {
+  customApiKey?: string;
+}
+
+export const QuotaMeter: React.FC<QuotaMeterProps> = ({ customApiKey }) => {
   const { t, lang } = useLanguage();
   const [quota, setQuota] = useState<ApiQuotaUsage>({
     requestsThisMinute: 0,
@@ -43,7 +47,7 @@ export const QuotaMeter: React.FC = () => {
 
     try {
       const settings = getUserSettings();
-      const apiKey = settings.gemini_api_key?.trim();
+      const apiKey = (customApiKey !== undefined ? customApiKey : settings.gemini_api_key)?.trim();
       const headers: Record<string, string> = {};
       if (apiKey) {
         headers["x-gemini-api-key"] = apiKey;
