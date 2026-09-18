@@ -12,6 +12,17 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
   const { t, lang } = useLanguage();
   const { user, loading, isSyncing, loginWithGoogle } = useAuth();
 
+  const handleBackupClick = () => {
+    if (typeof navigator !== "undefined") {
+      const ua = navigator.userAgent || "";
+      if (/Line|FBAN|FBAV|Instagram|Messenger/i.test(ua)) {
+        onOpenSettings();
+        return;
+      }
+    }
+    loginWithGoogle();
+  };
+
   return (
     <header className="sticky top-0 z-30 bg-[#fafaf9]/85 dark:bg-[#0c0c0e]/85 backdrop-blur-md border-b border-neutral-200/50 dark:border-neutral-800/60 transition-colors">
       <div className="max-w-md mx-auto px-4 sm:px-5 h-14 flex items-center justify-between">
@@ -55,7 +66,7 @@ export const Navbar: React.FC<NavbarProps> = ({ onOpenSettings, onOpenHistory })
             </button>
           ) : (
             <button
-              onClick={loginWithGoogle}
+              onClick={handleBackupClick}
               disabled={loading}
               className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-white dark:bg-[#18181c] border border-neutral-200 dark:border-neutral-700/80 hover:border-neutral-400 text-neutral-600 dark:text-neutral-300 text-[11px] font-medium transition active:scale-95 shadow-2xs disabled:opacity-50"
               title={t("cloud_sync_desc")}

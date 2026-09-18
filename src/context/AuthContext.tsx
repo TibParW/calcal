@@ -6,6 +6,7 @@ import React, {
   useState,
   useEffect,
   useCallback,
+  useRef,
 } from "react";
 import { User } from "firebase/auth";
 import {
@@ -15,6 +16,7 @@ import {
   checkRedirectResult,
   fetchFoodLogsFromCloud,
   batchUploadFoodLogsToCloud,
+  deleteFoodLogFromCloud,
   fetchUserSettingsFromCloud,
   saveUserSettingsToCloud,
 } from "@/lib/firebase";
@@ -23,6 +25,8 @@ import {
   saveFoodLogs,
   getUserSettings,
   saveUserSettings,
+  getDeletedLogIds,
+  clearDeletedLogIds,
 } from "@/lib/storage";
 import { FoodLogItem } from "@/types";
 
@@ -50,19 +54,41 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
   const [lastSyncTime, setLastSyncTime] = useState<Date | null>(null);
 
+  const isSyncingRef = useRef(false);
+
   // Smart two-way merge between LocalStorage and Firestore
   const performSync = useCallback(async (currentUser: User) => {
-    if (!currentUser) return;
+    if (!currentUser || isSyncingRef.current) return;
+    isSyncingRef.current = true;
     setIsSyncing(true);
     setSyncStatus("syncing");
 
     try {
+      // 0. Purge any pending deleted items tracked offline
+      const deletedIds = getDeletedLogIds();
+      if (deletedIds.length > 0) {
+        await Promise.all(
+          deletedIds.map((id) =>
+            deleteFoodLogFromCloud(currentUser.uid, id).catch((e) =>
+              console.warn("[sync] Failed to purge deleted log:", e)
+            )
+          )
+        );
+        clearDeletedLogIds(deletedIds);
+      }
+      const deletedSet = new Set(deletedIds);
+
       const localLogs = getFoodLogs();
-      const cloudLogs = await fetchFoodLogsFromCloud(currentUser.uid);
+      const rawCloudLogs = await fetchFoodLogsFromCloud(currentUser.uid);
+      const cloudLogs = rawCloudLogs.filter((item) => !deletedSet.has(item.id));
 
       // Create maps for quick lookup
       const localMap = new Map<string, FoodLogItem>();
-      localLogs.forEach((it) => localMap.set(it.id, it));
+      localLogs.forEach((it) => {
+        if (!deletedSet.has(it.id)) {
+          localMap.set(it.id, it);
+        }
+      });
 
       const cloudMap = new Map<string, FoodLogItem>();
       cloudLogs.forEach((it) => cloudMap.set(it.id, it));
@@ -72,6 +98,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 1. Check local logs: if not in cloud, queue for upload
       localLogs.forEach((localItem) => {
+        if (deletedSet.has(localItem.id)) return;
         if (!cloudMap.has(localItem.id)) {
           itemsToUpload.push(localItem);
           mergedList.push(localItem);
@@ -87,7 +114,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
 
       // 2. Check cloud logs: if not in local, add to merged list
       cloudLogs.forEach((cloudItem) => {
-        if (!localMap.has(cloudItem.id)) {
+        if (!localMap.has(cloudItem.id) && !deletedSet.has(cloudItem.id)) {
           mergedList.push(cloudItem);
         }
       });
@@ -142,6 +169,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       console.error("[auth] Sync failed:", err);
       setSyncStatus("error");
     } finally {
+      isSyncingRef.current = false;
       setIsSyncing(false);
     }
   }, []);

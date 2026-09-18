@@ -67,6 +67,7 @@ export async function POST(request: NextRequest) {
     // Prioritizes ultra-fast sub-second models with gemini-3.7-flash as #2 powerhouse
     const fastModels = [
       "gemini-3.5-flash-lite",
+      "gemini-3.8-flash",
       "gemini-3.7-flash",
       "gemini-3.5-flash",
       "gemini-flash-lite-latest",
@@ -92,7 +93,7 @@ export async function POST(request: NextRequest) {
             contents: [{ parts: [{ text: prompt }] }],
             generationConfig: {
               responseMimeType: "application/json",
-              temperature: 1.0,
+              temperature: 0.2,
               maxOutputTokens: 1024,
             },
           }),

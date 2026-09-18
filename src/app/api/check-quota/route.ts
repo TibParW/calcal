@@ -30,6 +30,7 @@ export async function POST(request: NextRequest) {
   // Prioritizes ultra-fast lite models (<1s response) with gemini-3.7-flash as powerhouse #2
   const probeModels = [
     "gemini-3.5-flash-lite",
+    "gemini-3.8-flash",
     "gemini-3.7-flash",
     "gemini-3.5-flash",
     "gemini-flash-lite-latest",

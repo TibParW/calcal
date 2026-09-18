@@ -241,7 +241,7 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
       calories: Math.max(0, item.estimated_calories),
       macronutrients: item.macronutrients,
       portion_multiplier: item.portion_multiplier || 1.0,
-      portion_label: item.portion_label || "ปกติ (x1.0)",
+      portion_label: item.portion_label || (lang === "en" ? "Regular (1.0x)" : "ปกติ (x1.0)"),
       ingredients: item.ingredients_detected,
       health_tip: item.health_tip,
       confidence_level: item.confidence_level,

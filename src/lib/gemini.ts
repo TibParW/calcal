@@ -89,6 +89,7 @@ const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
   "gemini-3.5-flash-lite",
+  "gemini-3.8-flash",
   "gemini-3.7-flash",
   "gemini-3.5-flash",
   "gemini-flash-lite-latest",
@@ -155,6 +156,7 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
       // #2 gemini-3.7-flash as the supreme intelligence powerhouse
       const priority = [
         "gemini-3.5-flash-lite",
+        "gemini-3.8-flash",
         "gemini-3.7-flash",
         "gemini-3.5-flash",
         "gemini-flash-lite-latest",

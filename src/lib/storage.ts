@@ -8,6 +8,7 @@ import {
 
 const LOGS_STORAGE_KEY = "CALCAL_FOOD_LOGS_V1";
 const SETTINGS_STORAGE_KEY = "CALCAL_USER_SETTINGS_V1";
+const DELETED_IDS_STORAGE_KEY = "CALCAL_DELETED_LOG_IDS_V1";
 
 export const DEFAULT_SETTINGS: UserSettings = {
   daily_goal: 2000,
@@ -201,10 +202,38 @@ export function addFoodLog(item: Omit<FoodLogItem, "id" | "createdAt">): FoodLog
   return newItem;
 }
 
+export function getDeletedLogIds(): string[] {
+  try {
+    const raw = safeGetItem(DELETED_IDS_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : [];
+  } catch {
+    return [];
+  }
+}
+
+export function trackDeletedLogId(id: string): void {
+  try {
+    const ids = getDeletedLogIds();
+    if (!ids.includes(id)) {
+      ids.push(id);
+      safeSetItem(DELETED_IDS_STORAGE_KEY, JSON.stringify(ids.slice(-100)));
+    }
+  } catch {}
+}
+
+export function clearDeletedLogIds(idsToRemove: string[]): void {
+  try {
+    const current = getDeletedLogIds();
+    const filtered = current.filter((id) => !idsToRemove.includes(id));
+    safeSetItem(DELETED_IDS_STORAGE_KEY, JSON.stringify(filtered));
+  } catch {}
+}
+
 export function deleteFoodLog(id: string): void {
   const all = getFoodLogs();
   const filtered = all.filter((item) => item.id !== id);
   saveFoodLogs(filtered);
+  trackDeletedLogId(id);
 
   // Background Cloud Sync delete if user is authenticated
   if (typeof window !== "undefined" && auth && auth.currentUser) {
