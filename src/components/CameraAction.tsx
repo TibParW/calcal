@@ -143,49 +143,54 @@ export const CameraAction: React.FC<CameraActionProps> = ({
         </div>
       </button>
 
-      {/* Primary Scan Buttons (Food & Nutrition Label) */}
-      <div className="grid grid-cols-2 gap-2">
-        {/* Food & Multi-dish camera */}
-        <button
-          onClick={() => cameraInputRef.current?.click()}
-          disabled={disabled}
-          className="bg-neutral-900 hover:bg-black text-white dark:bg-neutral-100 dark:hover:bg-white dark:text-neutral-950 font-medium py-3.5 px-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition active:scale-[0.98] disabled:opacity-40 shadow-sm"
-        >
-          <Camera className="w-5 h-5 stroke-[2]" />
-          <span className="text-xs font-semibold tracking-tight">{t("cam_scan_food")}</span>
-          <span className="text-[10px] opacity-70">{t("cam_scan_food_sub")}</span>
-        </button>
+      {/* Hero Primary Action: Camera Scan */}
+      <button
+        onClick={() => cameraInputRef.current?.click()}
+        disabled={disabled}
+        className="w-full bg-neutral-900 hover:bg-black text-white dark:bg-white dark:hover:bg-neutral-100 dark:text-neutral-950 font-semibold py-3.5 px-4 rounded-2xl flex items-center justify-between transition-all active:scale-[0.98] disabled:opacity-40 shadow-sm hover:shadow-md group"
+      >
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-white/10 dark:bg-black/10 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+            <Camera className="w-5 h-5" />
+          </div>
+          <div className="text-left">
+            <span className="text-sm font-bold block leading-tight">{t("cam_scan_food")}</span>
+            <span className="text-[11px] opacity-70 block mt-0.5">{t("cam_scan_food_sub")}</span>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-[11px] font-medium bg-white/15 dark:bg-black/10 px-2.5 py-1 rounded-full shrink-0">
+          <span>AI 2s</span>
+          <span>⚡</span>
+        </div>
+      </button>
 
-        {/* Nutrition Facts Label camera */}
+      {/* Secondary Compact Actions (3 columns: Label OCR, Manual Text, Gallery) */}
+      <div className="grid grid-cols-3 gap-2">
         <button
           onClick={() => labelCameraInputRef.current?.click()}
           disabled={disabled}
-          className="bg-white dark:bg-[#141417] hover:bg-neutral-50 dark:hover:bg-neutral-800/80 text-neutral-900 dark:text-neutral-100 font-medium py-3.5 px-3 rounded-2xl flex flex-col items-center justify-center gap-1 transition active:scale-[0.98] disabled:opacity-40 border border-neutral-200/70 dark:border-neutral-800/70 shadow-sm"
+          className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 font-medium text-xs transition active:scale-95 disabled:opacity-40"
         >
-          <FileText className="w-5 h-5 stroke-[2] text-emerald-600 dark:text-emerald-400" />
-          <span className="text-xs font-semibold tracking-tight">{t("cam_scan_label")}</span>
-          <span className="text-[10px] text-neutral-400">{t("cam_scan_label_sub")}</span>
-        </button>
-      </div>
-
-      {/* Secondary Actions */}
-      <div className="grid grid-cols-2 gap-2">
-        <button
-          onClick={handleGalleryClick}
-          disabled={disabled}
-          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 font-medium text-xs transition active:scale-95 disabled:opacity-40"
-        >
-          <ImageIcon className="w-3.5 h-3.5 stroke-[2] text-neutral-400" />
-          <span>{t("cam_gallery")}</span>
+          <FileText className="w-4 h-4 stroke-[2] text-emerald-600 dark:text-emerald-400" />
+          <span className="text-[11px] font-medium tracking-tight truncate max-w-full">{t("cam_scan_label")}</span>
         </button>
 
         <button
           onClick={onOpenManualEntry}
           disabled={disabled}
-          className="flex items-center justify-center gap-1.5 py-2.5 px-3 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 font-medium text-xs transition active:scale-95 disabled:opacity-40"
+          className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 font-medium text-xs transition active:scale-95 disabled:opacity-40"
         >
-          <Plus className="w-3.5 h-3.5 stroke-[2] text-neutral-400" />
-          <span>{t("cam_manual")}</span>
+          <Plus className="w-4 h-4 stroke-[2] text-neutral-400" />
+          <span className="text-[11px] font-medium tracking-tight truncate max-w-full">{t("cam_manual")}</span>
+        </button>
+
+        <button
+          onClick={handleGalleryClick}
+          disabled={disabled}
+          className="flex flex-col items-center justify-center gap-1 py-2.5 px-2 rounded-2xl bg-white dark:bg-[#141417] border border-neutral-200/60 dark:border-neutral-800/60 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-50 dark:hover:bg-neutral-800/50 font-medium text-xs transition active:scale-95 disabled:opacity-40"
+        >
+          <ImageIcon className="w-4 h-4 stroke-[2] text-neutral-400" />
+          <span className="text-[11px] font-medium tracking-tight truncate max-w-full">{t("cam_gallery")}</span>
         </button>
       </div>
     </div>

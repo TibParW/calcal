@@ -447,9 +447,17 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
 
           {/* Gemini API Key */}
           <div className="space-y-2 pt-3 border-t border-neutral-100 dark:border-neutral-800">
-            <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
-              {t("settings_api_key_title")}
-            </span>
+            <div className="flex items-center justify-between">
+              <span className="text-[11px] font-semibold text-neutral-400 uppercase tracking-wider block">
+                {t("settings_api_key_title")}
+              </span>
+              <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+                {lang === "en" ? "Free 1,500/day" : "ฟรี 1,500 ครั้ง/วัน"}
+              </span>
+            </div>
+            <p className="text-[11px] text-neutral-500 dark:text-neutral-400 leading-relaxed">
+              {t("settings_api_key_desc")}
+            </p>
             <input
               type="password"
               value={apiKey}
@@ -467,7 +475,7 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
                 href="https://aistudio.google.com/app/apikey"
                 target="_blank"
                 rel="noreferrer"
-                className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:underline"
+                className="inline-flex items-center gap-1 text-[11px] text-emerald-600 dark:text-emerald-400 hover:text-emerald-700 dark:hover:text-emerald-300 font-medium hover:underline"
               >
                 <span>{t("settings_api_key_link")}</span>
                 <ExternalLink className="w-3 h-3" />

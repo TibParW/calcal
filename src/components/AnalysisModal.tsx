@@ -13,6 +13,7 @@ import {
   Sparkles,
   Trash2,
   Clock,
+  ExternalLink,
 } from "lucide-react";
 import { getApiQuotaUsage, clearApiCooldown } from "@/lib/storage";
 
@@ -558,6 +559,17 @@ export const AnalysisModal: React.FC<AnalysisModalProps> = ({
                           >
                             {t("modal_api_key_btn")}
                           </button>
+                        </div>
+                        <div className="pt-0.5">
+                          <a
+                            href="https://aistudio.google.com/app/apikey"
+                            target="_blank"
+                            rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-[10.5px] text-emerald-600 dark:text-emerald-400 hover:underline"
+                          >
+                            <span>{t("settings_api_key_link")}</span>
+                            <ExternalLink className="w-2.5 h-2.5" />
+                          </a>
                         </div>
                       </div>
                     )}

@@ -68,7 +68,7 @@ export const translations = {
     modal_save_btn: "บันทึก {count} รายการ ({cals} kcal)",
     modal_save_disabled: "กรุณาเลือกอย่างน้อย 1 รายการ",
     modal_retry: "ลองใหม่อีกครั้ง",
-    modal_api_key_prompt: "กรอก Gemini API Key ส่วนตัวเพื่อใช้งานต่อ",
+    modal_api_key_prompt: "ใส่กุญแจ AI ส่วนตัว (ฟรีจาก Google) เพื่อวิเคราะห์ต่อได้ทันทีโดยไม่ต้องรอคิว",
     modal_api_key_btn: "บันทึก Key",
 
     // Quick Tags
@@ -106,9 +106,9 @@ export const translations = {
     settings_storage_used: "พื้นที่ใช้งานในเครื่อง:",
     settings_strip_btn: "ลบเฉพาะรูปภาพเพื่อคืนพื้นที่",
     settings_strip_confirm: "ต้องการลบเฉพาะไฟล์รูปภาพเพื่อประหยัดพื้นที่ใช่หรือไม่? (ประวัติและตัวเลขยังคงอยู่ครบ 100%)",
-    settings_api_key_title: "Gemini API Key ส่วนตัว (ไม่จำเป็นต้องใส่)",
-    settings_api_key_desc: "บันทึกไว้ในเครื่องของคุณเท่านั้น เผื่อกรณีโควตารวมหมด",
-    settings_api_key_link: "ขอรับ API Key ฟรีที่ Google AI Studio",
+    settings_api_key_title: "กุญแจ AI ส่วนตัว (Google Gemini API)",
+    settings_api_key_desc: "ฟรี 100% จาก Google (1,500 ครั้ง/วัน) — ปลดล็อกความเร็วสูงสุด ไม่ต้องรอคิวส่วนกลาง และข้อมูลเป็นส่วนตัว",
+    settings_api_key_link: "วิธีรับกุญแจ AI ฟรีใน 1 นาที (Google AI Studio)",
     quota_title: "สถานะและโควตา API (Google Free Tier)",
     quota_rpm_label: "ความถี่ต่อนาที (RPM)",
     quota_rpm_remaining: "เหลืออีก {n} ครั้งในนาทีนี้",
@@ -183,6 +183,13 @@ export const translations = {
     hist_empty: "ยังไม่มีประวัติการบันทึก",
     hist_total: "รวม",
     hist_meals: "มื้อ",
+
+    // PWA Install Prompt
+    install_title: "ติดตั้ง Calcal บนหน้าจอโฮม",
+    install_desc: "เปิดใช้งานเร็วดุจแอปจริง ใช้ได้แม้ออฟไลน์",
+    install_btn: "ติดตั้งเลย",
+    install_ios_step: "แตะปุ่มแชร์ แล้วเลือก 'เพิ่มไปยังหน้าจอโฮม'",
+    install_dismiss: "ไว้คราวหลัง",
   },
   en: {
     // Brand
@@ -251,7 +258,7 @@ export const translations = {
     modal_save_btn: "Save {count} items ({cals} kcal)",
     modal_save_disabled: "Please select at least 1 item",
     modal_retry: "Try Again",
-    modal_api_key_prompt: "Enter your personal Gemini API Key to continue",
+    modal_api_key_prompt: "Enter your personal AI Key (100% Free) to continue without waiting",
     modal_api_key_btn: "Save Key",
 
     // Quick Tags
@@ -289,9 +296,9 @@ export const translations = {
     settings_storage_used: "Storage used on device:",
     settings_strip_btn: "Clear images to free up space",
     settings_strip_confirm: "Clear all thumbnail images to save space? (History and numbers will remain 100% intact)",
-    settings_api_key_title: "Personal Gemini API Key (Optional)",
-    settings_api_key_desc: "Saved only on your device in case shared quota is exhausted",
-    settings_api_key_link: "Get free API Key at Google AI Studio",
+    settings_api_key_title: "Personal AI Key (Google Gemini API)",
+    settings_api_key_desc: "100% Free by Google (1,500 scans/day) — Unlocks maximum speed with zero waiting queue",
+    settings_api_key_link: "Get your free AI Key in 1 minute (Google AI Studio)",
     quota_title: "API Quota & Rate Limit (Google Free Tier)",
     quota_rpm_label: "Requests Per Minute (RPM)",
     quota_rpm_remaining: "{n} remaining this minute",
@@ -366,6 +373,13 @@ export const translations = {
     hist_empty: "No logged history yet",
     hist_total: "Total",
     hist_meals: "meals",
+
+    // PWA Install Prompt
+    install_title: "Install Calcal to Home Screen",
+    install_desc: "Instant launch and works offline like a native app",
+    install_btn: "Install",
+    install_ios_step: "Tap the Share button, then select 'Add to Home Screen'",
+    install_dismiss: "Maybe later",
   },
 };
 

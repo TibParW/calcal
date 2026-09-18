@@ -4,10 +4,11 @@ import { useLanguage } from "@/context/LanguageContext";
 interface CalorieRingProps {
   consumed: number;
   goal: number;
+  streak?: number;
 }
 
-export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal }) => {
-  const { t } = useLanguage();
+export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal, streak = 0 }) => {
+  const { lang, t } = useLanguage();
   const safeGoal = Math.max(1, goal);
   const percentage = Math.min(Math.round((consumed / safeGoal) * 100), 100);
   const remaining = safeGoal - consumed;
@@ -93,6 +94,25 @@ export const CalorieRing: React.FC<CalorieRingProps> = ({ consumed, goal }) => {
             </span>{" "}
             ({percentage}%)
           </span>
+        )}
+      </div>
+
+      {/* Consistency Streak Badge */}
+      <div className="mt-2.5 flex items-center justify-center">
+        {streak > 0 ? (
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-500/10 dark:bg-amber-500/15 border border-amber-500/25 text-amber-600 dark:text-amber-400 text-xs font-semibold transition-all">
+            <span className="text-sm leading-none">🔥</span>
+            <span>
+              {lang === "en"
+                ? `${streak} day${streak > 1 ? "s" : ""} streak`
+                : `บันทึกต่อเนื่อง ${streak} วัน`}
+            </span>
+          </div>
+        ) : (
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-neutral-100 dark:bg-neutral-800/60 text-neutral-400 text-[11px]">
+            <span className="leading-none">✨</span>
+            <span>{lang === "en" ? "Start your streak today" : "เริ่มบันทึกสะสมวันแรก"}</span>
+          </div>
         )}
       </div>
     </div>

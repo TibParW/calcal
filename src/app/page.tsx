@@ -19,6 +19,7 @@ import {
   deleteFoodLog,
   recordApiScanAttempt,
   recordApiCooldown,
+  calculateStreak,
 } from "@/lib/storage";
 import { compressImageForAnalysis, createThumbnail } from "@/lib/imageUtils";
 
@@ -30,6 +31,7 @@ import { CalorieRing } from "@/components/CalorieRing";
 import { MacroBar } from "@/components/MacroBar";
 import { CameraAction } from "@/components/CameraAction";
 import { FoodList } from "@/components/FoodList";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import { useLanguage } from "@/context/LanguageContext";
 
 // Dynamic Code Splitting for heavy modals (Optimizes initial bundle size and speeds up first paint)
@@ -59,6 +61,7 @@ export default function HomePage() {
   const [selectedDate, setSelectedDate] = useState<string>(getLocalDateString());
   const isHistoricalViewRef = React.useRef<boolean>(false);
   const [logs, setLogs] = useState<FoodLogItem[]>([]);
+  const [streak, setStreak] = useState<number>(0);
   const [settings, setSettings] = useState<UserSettings>({
     daily_goal: 2000,
     protein_goal_g: 100,
@@ -96,6 +99,7 @@ export default function HomePage() {
     const dayLogs = getLogsByDate(selectedDate);
     setLogs(dayLogs);
     setSettings(getUserSettings());
+    setStreak(calculateStreak());
   }, [selectedDate]);
 
   useEffect(() => {
@@ -326,6 +330,7 @@ export default function HomePage() {
         <CalorieRing
           consumed={summary.totalCalories}
           goal={settings.daily_goal || 2000}
+          streak={streak}
         />
 
         {/* Macronutrients Progress */}
@@ -353,6 +358,9 @@ export default function HomePage() {
           />
         </div>
       </main>
+
+      {/* PWA Install Prompt Banner (iOS Safari & Android/Chrome) */}
+      <InstallPrompt />
 
       {/* Minimal Footer */}
       <footer className="w-full max-w-sm sm:max-w-md mx-auto px-4 py-6 text-center text-[11px] text-neutral-400">

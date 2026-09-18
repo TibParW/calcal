@@ -493,6 +493,34 @@ export function getPast7DaysSummary(): WeeklyOverviewData {
   };
 }
 
+/**
+ * Calculates current active consecutive logging streak in days
+ */
+export function calculateStreak(): number {
+  const logs = getFoodLogs();
+  if (logs.length === 0) return 0;
+
+  const datesWithLogs = new Set(logs.map((l) => l.date));
+  const today = getLocalDateString();
+  const yesterday = shiftDate(today, -1);
+
+  // If neither today nor yesterday has any meal logs, the streak is 0
+  if (!datesWithLogs.has(today) && !datesWithLogs.has(yesterday)) {
+    return 0;
+  }
+
+  let streak = 0;
+  // Start from today if user logged today, otherwise count backwards from yesterday
+  let checkDate = datesWithLogs.has(today) ? today : yesterday;
+
+  while (datesWithLogs.has(checkDate)) {
+    streak++;
+    checkDate = shiftDate(checkDate, -1);
+  }
+
+  return streak;
+}
+
 /* =========================================================================
  * API Quota & Rate Limit Tracking (Client-Side Sliding Window)
  * ========================================================================= */

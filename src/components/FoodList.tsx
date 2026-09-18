@@ -9,6 +9,76 @@ interface FoodListProps {
   selectedDate: string;
 }
 
+interface MealGroup {
+  id: string;
+  name: string;
+  icon: string;
+  items: FoodLogItem[];
+  totalCalories: number;
+}
+
+function groupItemsByMeal(items: FoodLogItem[], lang: string): MealGroup[] {
+  const groups: Record<string, MealGroup> = {
+    breakfast: {
+      id: "breakfast",
+      name: lang === "en" ? "Breakfast" : "มื้อเช้า",
+      icon: "🌅",
+      items: [],
+      totalCalories: 0,
+    },
+    lunch: {
+      id: "lunch",
+      name: lang === "en" ? "Lunch" : "มื้อเที่ยง",
+      icon: "☀️",
+      items: [],
+      totalCalories: 0,
+    },
+    snack: {
+      id: "snack",
+      name: lang === "en" ? "Snack" : "ของว่าง",
+      icon: "☕",
+      items: [],
+      totalCalories: 0,
+    },
+    dinner: {
+      id: "dinner",
+      name: lang === "en" ? "Dinner" : "มื้อเย็น",
+      icon: "🌙",
+      items: [],
+      totalCalories: 0,
+    },
+    latenight: {
+      id: "latenight",
+      name: lang === "en" ? "Late Night" : "มื้อดึก",
+      icon: "🦉",
+      items: [],
+      totalCalories: 0,
+    },
+  };
+
+  items.forEach((item) => {
+    const [hourStr] = (item.time || "12:00").split(":");
+    const hour = parseInt(hourStr, 10);
+    let key = "lunch";
+    if (isNaN(hour) || (hour >= 11 && hour < 15)) {
+      key = "lunch";
+    } else if (hour >= 5 && hour < 11) {
+      key = "breakfast";
+    } else if (hour >= 15 && hour < 18) {
+      key = "snack";
+    } else if (hour >= 18 && hour < 24) {
+      key = "dinner";
+    } else {
+      key = "latenight";
+    }
+
+    groups[key].items.push(item);
+    groups[key].totalCalories += item.calories || 0;
+  });
+
+  return Object.values(groups).filter((g) => g.items.length > 0);
+}
+
 export const FoodList: React.FC<FoodListProps> = ({
   items,
   onDeleteItem,
@@ -34,19 +104,34 @@ export const FoodList: React.FC<FoodListProps> = ({
     );
   }
 
+  const mealGroups = groupItemsByMeal(items, lang);
+
   return (
-    <div className="flex flex-col gap-2">
-      <div className="flex items-center justify-between px-1 mb-1">
+    <div className="flex flex-col gap-4">
+      <div className="flex items-center justify-between px-1">
         <span className="text-xs font-semibold text-neutral-400 dark:text-neutral-500 tracking-wider uppercase">
-          {lang === "th" ? `มื้ออาหาร (${items.length})` : `Meals (${items.length})`}
+          {lang === "th" ? `รายการอาหาร (${items.length})` : `Meals (${items.length})`}
         </span>
         <span className="text-xs text-neutral-400 dark:text-neutral-500 font-medium">
           {t("hist_total")} {items.reduce((sum, item) => sum + item.calories, 0).toLocaleString()} {t("ring_kcal")}
         </span>
       </div>
 
-      <div className="flex flex-col gap-2">
-        {items.map((item) => {
+      {mealGroups.map((group) => (
+        <div key={group.id} className="space-y-2">
+          {/* Meal Section Header */}
+          <div className="flex items-center justify-between px-1.5 pt-0.5">
+            <span className="text-[11px] font-bold text-neutral-700 dark:text-neutral-300 flex items-center gap-1.5 tracking-tight">
+              <span>{group.icon}</span>
+              <span>{group.name}</span>
+            </span>
+            <span className="text-[10.5px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/40 px-2 py-0.5 rounded-full">
+              {group.totalCalories.toLocaleString()} kcal
+            </span>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            {group.items.map((item) => {
           const isExpanded = expandedId === item.id;
           const isConfirmingDelete = itemToDelete === item.id;
           const displayName =
@@ -186,7 +271,9 @@ export const FoodList: React.FC<FoodListProps> = ({
             </div>
           );
         })}
-      </div>
+          </div>
+        </div>
+      ))}
     </div>
   );
 };
