@@ -12,22 +12,47 @@ export async function POST(request: NextRequest) {
       userApiKey = rawKey.trim();
     }
 
-    const body = await request.json();
-    const { image, mimeType, note, scanMode } = body;
-
-    if (!image) {
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object") {
       return NextResponse.json(
-        { error: "กรุณาส่งข้อมูลรูปภาพอาหาร" },
+        { error: "รูปแบบคำขอไม่ถูกต้อง (Invalid JSON Body)" },
         { status: 400 }
       );
     }
 
+    const { image, mimeType, note, scanMode } = body;
+
+    // Validate image: must be non-empty string and reasonable size (max 8MB payload)
+    if (!image || typeof image !== "string" || image.trim().length < 50) {
+      return NextResponse.json(
+        { error: "กรุณาส่งข้อมูลรูปภาพอาหารที่ถูกต้อง" },
+        { status: 400 }
+      );
+    }
+
+    if (image.length > 8 * 1024 * 1024) {
+      return NextResponse.json(
+        { error: "ขนาดไฟล์รูปภาพใหญ่เกินกำหนด (จำกัดสูงสุด 8MB)" },
+        { status: 413 }
+      );
+    }
+
+    // Whitelist supported image MIME types
+    const allowedMimeTypes = ["image/jpeg", "image/png", "image/webp", "image/heic", "image/heif"];
+    const safeMimeType = (typeof mimeType === "string" && allowedMimeTypes.includes(mimeType.toLowerCase()))
+      ? mimeType.toLowerCase()
+      : "image/jpeg";
+
+    // Sanitize note: limit to 300 characters to prevent prompt injection and token exhaustion
+    const safeNote = typeof note === "string" ? note.trim().slice(0, 300) : undefined;
+    const safeScanMode = scanMode === "nutrition_label" ? "nutrition_label" : "food";
+
     const result = await analyzeFoodImage(
       image,
-      mimeType || "image/jpeg",
+      safeMimeType,
       userApiKey,
-      note,
-      scanMode === "nutrition_label" ? "nutrition_label" : "food"
+      safeNote,
+      safeScanMode
     );
 
     return NextResponse.json(result);

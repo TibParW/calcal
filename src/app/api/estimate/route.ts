@@ -23,10 +23,25 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const body = await request.json().catch(() => ({}));
-    const query = (body?.query || "").trim();
+    const body = await request.json().catch(() => null);
+    if (!body || typeof body !== "object") {
+      return NextResponse.json(
+        { error: "รูปแบบคำขอไม่ถูกต้อง (Invalid JSON Body)" },
+        { status: 400 }
+      );
+    }
 
-    if (!query) {
+    const rawQuery = body?.query;
+    if (!rawQuery || typeof rawQuery !== "string") {
+      return NextResponse.json(
+        { error: "กรุณาระบุชื่ออาหารหรือเมนู" },
+        { status: 400 }
+      );
+    }
+
+    // Limit length to 150 characters to prevent prompt injection and token wastage
+    const query = rawQuery.trim().slice(0, 150);
+    if (query.length === 0) {
       return NextResponse.json(
         { error: "กรุณาระบุชื่ออาหารหรือเมนู" },
         { status: 400 }
