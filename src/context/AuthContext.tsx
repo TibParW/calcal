@@ -103,18 +103,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         await batchUploadFoodLogsToCloud(currentUser.uid, itemsToUpload);
       }
 
-      // Sync user settings (BMR / daily goals)
+      // Sync user settings (BMR / daily goals / personal Gemini API key)
       const cloudSettings = await fetchUserSettingsFromCloud(currentUser.uid);
       const localSettings = getUserSettings();
 
       if (cloudSettings) {
-        // Merge cloud goals with local
-        saveUserSettings({
+        // Merge cloud goals and Gemini API key with local
+        const mergedSettings = {
           daily_goal: cloudSettings.daily_goal || localSettings.daily_goal,
           protein_goal_g: cloudSettings.protein_goal_g || localSettings.protein_goal_g,
           carbs_goal_g: cloudSettings.carbs_goal_g || localSettings.carbs_goal_g,
           fat_goal_g: cloudSettings.fat_goal_g || localSettings.fat_goal_g,
-        });
+          gemini_api_key: cloudSettings.gemini_api_key || localSettings.gemini_api_key,
+          storage_mode: cloudSettings.storage_mode || localSettings.storage_mode,
+        };
+        saveUserSettings(mergedSettings);
+
+        // If local had a gemini key but cloud didn't have one yet, upload it now
+        if (localSettings.gemini_api_key && !cloudSettings.gemini_api_key) {
+          await saveUserSettingsToCloud(currentUser.uid, {
+            ...cloudSettings,
+            ...mergedSettings,
+          });
+        }
       } else {
         // Upload local settings to cloud
         await saveUserSettingsToCloud(currentUser.uid, localSettings);

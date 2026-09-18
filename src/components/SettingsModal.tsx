@@ -462,15 +462,23 @@ export const SettingsModal: React.FC<SettingsModalProps> = ({
               placeholder="AIzaSy..."
               className="w-full px-3.5 py-2.5 rounded-xl bg-neutral-100/70 dark:bg-neutral-800/50 border border-neutral-200/50 dark:border-neutral-700/50 text-neutral-900 dark:text-white font-mono text-xs focus:outline-none focus:border-neutral-400"
             />
-            <a
-              href="https://aistudio.google.com/app/apikey"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:underline pt-0.5"
-            >
-              <span>{t("settings_api_key_link")}</span>
-              <ExternalLink className="w-3 h-3" />
-            </a>
+            <div className="flex items-center justify-between pt-0.5">
+              <a
+                href="https://aistudio.google.com/app/apikey"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1 text-[11px] text-neutral-400 hover:text-neutral-700 dark:hover:text-neutral-200 hover:underline"
+              >
+                <span>{t("settings_api_key_link")}</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              {user && apiKey ? (
+                <span className="inline-flex items-center gap-1 text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                  <CheckCircle2 className="w-3 h-3" />
+                  {lang === "en" ? "Synced to cloud" : "ซิงค์กับบัญชีของคุณแล้ว"}
+                </span>
+              ) : null}
+            </div>
 
             {/* Quota Progress Bar */}
             <div className="pt-2">

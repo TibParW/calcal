@@ -243,9 +243,8 @@ export async function saveUserSettingsToCloud(
   if (!userId) return false;
   try {
     const docRef = doc(db, "users", userId, "settings", "profile");
-    // Exclude local Gemini API key from cloud sync if desired for privacy, or sync with consent
-    const { gemini_api_key, ...safeSettings } = settings;
-    await setDoc(docRef, safeSettings, { merge: true });
+    // Save settings per user into their private Firestore profile
+    await setDoc(docRef, settings, { merge: true });
     return true;
   } catch (err) {
     console.warn("[firebase] Failed to save settings to cloud:", err);
