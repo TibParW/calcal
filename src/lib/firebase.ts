@@ -59,6 +59,18 @@ googleProvider.setCustomParameters({ prompt: "select_account" });
  * Sign in with Google (Popup with graceful mobile fallback)
  */
 export async function loginWithGoogle(): Promise<User | null> {
+  const isStandalone =
+    typeof window !== "undefined" &&
+    (window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true);
+
+  // In iOS Standalone Mode (Add to Home Screen), WebKit strictly prohibits window.open popups.
+  // We directly use signInWithRedirect to guarantee a smooth sign-in flow.
+  if (isStandalone) {
+    await signInWithRedirect(auth, googleProvider);
+    return null;
+  }
+
   try {
     const result = await signInWithPopup(auth, googleProvider);
     return result.user;
