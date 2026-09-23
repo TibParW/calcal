@@ -88,15 +88,11 @@ const NUTRITION_LABEL_SYSTEM_PROMPT = `
 const modelsCache = new Map<string, { models: string[]; expires: number }>();
 
 const STATIC_CANDIDATE_MODELS = [
-  "gemini-3.5-flash-lite",
   "gemini-3.8-flash",
-  "gemini-3.7-flash",
-  "gemini-3.5-flash",
-  "gemini-flash-lite-latest",
-  "gemini-3.1-flash-lite",
-  "gemini-1.5-flash",
+  "gemini-3.5-flash-lite",
+  "gemini-2.5-flash",
   "gemini-2.0-flash",
-  "gemini-flash-latest",
+  "gemini-1.5-flash",
 ].filter(Boolean) as string[];
 
 async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
@@ -139,8 +135,7 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
             Array.isArray(m.supportedGenerationMethods) &&
             m.supportedGenerationMethods.includes("generateContent")
         )
-        .map((m: any) => (m.name || "").replace(/^models\//, ""))
-        .filter((name: string) => name && !name.includes("2.5-flash"));
+        .map((m: any) => (m.name || "").replace(/^models\//, ""));
 
       const flashModels = validModels.filter(
         (name: string) =>
@@ -151,20 +146,12 @@ async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
       );
       const otherModels = validModels.filter((name: string) => !name.includes("flash"));
 
-      // Reliable priority order with real Gemini production models (supporting both 3.x and legacy keys)
-      // #1 gemini-3.5-flash-lite for ultra-fast 1-2s scans
-      // #2 gemini-3.7-flash as the supreme intelligence powerhouse
       const priority = [
-        "gemini-3.5-flash-lite",
         "gemini-3.8-flash",
-        "gemini-3.7-flash",
-        "gemini-3.5-flash",
-        "gemini-flash-lite-latest",
-        "gemini-3.1-flash-lite",
-        "gemini-1.5-flash",
-        "gemini-1.5-flash-latest",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash",
         "gemini-2.0-flash",
-        "gemini-flash-latest",
+        "gemini-1.5-flash",
       ];
       flashModels.sort((a, b) => {
         const idxA = priority.indexOf(a);
@@ -240,10 +227,17 @@ export async function analyzeFoodImage(
     let rawText = "";
     let lastError: any = null;
 
+    const startTime = Date.now();
     // Try all candidate models in sequence
     const modelsToTry = candidateModels;
 
     for (const modelName of modelsToTry) {
+      // Global deadline guard: Always finish before Vercel 30s limit
+      if (Date.now() - startTime > 22000) {
+        console.warn(`[Gemini API] Total image analysis time exceeded 22s guard. Stopping cascade.`);
+        break;
+      }
+
       try {
         const model = genAI.getGenerativeModel({
           model: modelName,
@@ -255,9 +249,9 @@ export async function analyzeFoodImage(
           },
         });
 
-        // Set a 16s timeout per model: prevents hanging indefinitely if Google queue is congested
+        // Set a 9.5s timeout per model: prevents hanging if Google queue is congested
         const timeoutPromise = new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("MODEL_TIMEOUT: เซิร์ฟเวอร์ตอบสนองช้าเกินไป")), 16000)
+          setTimeout(() => reject(new Error("MODEL_TIMEOUT: เซิร์ฟเวอร์ตอบสนองช้าเกินไป")), 9500)
         );
 
         const result = (await Promise.race([
@@ -325,6 +319,17 @@ export async function analyzeFoodImage(
           "โควตาส่วนกลางเต็มชั่วคราว กรุณารอสักครู่แล้วลองใหม่ หรือใส่ Gemini API Key ส่วนตัวในหน้าตั้งค่า"
         );
       }
+    }
+
+    if (
+      Date.now() - startTime >= 21000 ||
+      lastMsg.includes("timeout") ||
+      lastMsg.includes("model_timeout") ||
+      lastMsg.includes("aborted")
+    ) {
+      throw new Error(
+        "เซิร์ฟเวอร์ Google AI มีความหน่วงสูงชั่วคราว (Server Timeout) กรุณากดปุ่ม 'ลองใหม่อีกครั้ง' หรือระบุชื่ออาหารในกล่องสีเขียวเพื่อช่วย AI ให้วิเคราะห์ได้เร็วยิ่งขึ้นครับ"
+      );
     }
 
     if (
@@ -897,7 +902,16 @@ export async function estimateNutritionFromText(
 
     clearTimeout(timeoutId);
 
-    const data = await res.json().catch(() => ({}));
+    const rawText = await res.text();
+    let data: any = {};
+    try {
+      data = JSON.parse(rawText);
+    } catch {
+      if (res.status === 504 || res.status === 408) {
+        throw new Error("เซิร์ฟเวอร์ Google AI มีความหน่วงสูงชั่วคราว กรุณากดลองใหม่อีกครั้ง หรือกรอกตัวเลขด้วยตนเองครับ");
+      }
+      throw new Error(`เซิร์ฟเวอร์ขัดข้อง (${res.status}) กรุณาลองใหม่อีกครั้งครับ`);
+    }
 
     if (!res.ok) {
       const errMsg = data.error || `HTTP ${res.status}`;

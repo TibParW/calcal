@@ -58,25 +58,44 @@ export const QuotaMeter: React.FC<QuotaMeterProps> = ({ customApiKey }) => {
         headers,
       });
 
-      const data = await res.json();
+      const rawText = await res.text();
+      let data: any = null;
+      try {
+        data = JSON.parse(rawText);
+      } catch {
+        if (res.status === 504 || res.status === 408) {
+          const timeoutResult: LastApiStatus = {
+            ok: false,
+            status: 504,
+            isHighDemand: true,
+            message: "เซิร์ฟเวอร์ Google AI มีความหน่วงสูงชั่วคราว (กรุณากดทดสอบซ้ำอีกครั้ง)",
+            testedAt: new Date().toLocaleTimeString("th-TH"),
+          };
+          setLiveStatus(timeoutResult);
+          saveLastApiStatus(timeoutResult);
+          return;
+        }
+        throw new Error(`Server returned HTTP ${res.status}`);
+      }
+
       const result: LastApiStatus = {
-        ok: data.ok,
-        status: data.status,
-        message: data.message,
-        testedAt: data.testedAt || new Date().toLocaleTimeString("th-TH"),
-        model: data.model,
-        isRateLimit: data.isRateLimit,
-        isDaily: data.isDaily,
-        isHighDemand: data.isHighDemand,
-        isKeyInvalid: data.isKeyInvalid,
-        latencyMs: data.latencyMs,
+        ok: Boolean(data?.ok),
+        status: data?.status || res.status,
+        message: data?.message || "ไม่สามารถเชื่อมต่อกับ Google AI ได้",
+        testedAt: data?.testedAt || new Date().toLocaleTimeString("th-TH"),
+        model: data?.model,
+        isRateLimit: data?.isRateLimit,
+        isDaily: data?.isDaily,
+        isHighDemand: data?.isHighDemand,
+        isKeyInvalid: data?.isKeyInvalid,
+        latencyMs: data?.latencyMs,
       };
 
       setLiveStatus(result);
       saveLastApiStatus(result);
 
       // If Google AI is confirmed alive & OK, immediately cancel any previous cooldown timer
-      if (data.ok) {
+      if (data?.ok) {
         clearApiCooldown();
         setCooldownSec(0);
         setQuota(getApiQuotaUsage());
@@ -85,7 +104,7 @@ export const QuotaMeter: React.FC<QuotaMeterProps> = ({ customApiKey }) => {
       const errResult: LastApiStatus = {
         ok: false,
         status: 0,
-        message: "ไม่สามารถส่งคำขอทดสอบได้ กรุณาตรวจสอบการเชื่อมต่ออินเทอร์เน็ต",
+        message: "การเชื่อมต่อขัดข้องชั่วคราว กรุณาตรวจสอบสัญญาณเน็ตหรือลองใหม่อีกครั้ง",
         testedAt: new Date().toLocaleTimeString("th-TH"),
       };
       setLiveStatus(errResult);

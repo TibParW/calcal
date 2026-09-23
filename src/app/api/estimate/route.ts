@@ -78,25 +78,28 @@ export async function POST(request: NextRequest) {
   "portion_description": "ข้าวกะเพราหมู 1 จาน + ไข่ดาว 1 ฟอง"
 }`;
 
+    const startTime = Date.now();
+
     // Multi-Model Cascade for Text Estimation:
-    // Prioritizes ultra-fast sub-second models with gemini-3.7-flash as #2 powerhouse
     const fastModels = [
-      "gemini-3.5-flash-lite",
       "gemini-3.8-flash",
-      "gemini-3.7-flash",
-      "gemini-3.5-flash",
-      "gemini-flash-lite-latest",
-      "gemini-3.1-flash-lite",
-      "gemini-1.5-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-2.5-flash",
       "gemini-2.0-flash",
-      "gemini-flash-latest",
+      "gemini-1.5-flash",
     ];
 
     let lastError: any = null;
 
     for (const modelName of fastModels) {
+      // Global deadline guard: Always finish before Vercel 10s limit
+      if (Date.now() - startTime > 7000) {
+        console.warn(`[api/estimate] Total estimate time exceeded 7s guard. Stopping cascade.`);
+        break;
+      }
+
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 4500);
+      const timeoutId = setTimeout(() => controller.abort(), 2800);
 
       try {
         const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -196,20 +199,31 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    const errMsg = lastError?.message || "ไม่สามารถเชื่อมต่อกับ AI ได้ในขณะนี้";
+    const rawErrMsg = lastError?.message || "ไม่สามารถเชื่อมต่อกับ AI ได้ในขณะนี้";
     const isRateLimit =
-      errMsg.includes("429") ||
-      errMsg.includes("RESOURCE_EXHAUSTED") ||
-      errMsg.includes("quota");
+      rawErrMsg.includes("429") ||
+      rawErrMsg.includes("RESOURCE_EXHAUSTED") ||
+      rawErrMsg.includes("quota");
+
+    const isTimeout =
+      Date.now() - startTime >= 6800 ||
+      rawErrMsg.toLowerCase().includes("aborted") ||
+      rawErrMsg.toLowerCase().includes("timeout");
+
+    let finalErrMsg = rawErrMsg;
+    if (isRateLimit) {
+      finalErrMsg = "โควตา API เต็มชั่วคราว กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง";
+    } else if (isTimeout) {
+      finalErrMsg = "เซิร์ฟเวอร์ Google AI มีความหน่วงสูงชั่วคราว กรุณากดลองใหม่อีกครั้ง หรือกรอกตัวเลขด้วยตนเองครับ";
+    }
 
     return NextResponse.json(
       {
-        error: isRateLimit
-          ? "โควตา API เต็มชั่วคราว กรุณารอ 1 นาทีแล้วลองใหม่อีกครั้ง"
-          : errMsg,
+        error: finalErrMsg,
         isRateLimit,
+        isTimeout,
       },
-      { status: isRateLimit ? 429 : 500 }
+      { status: isRateLimit ? 429 : isTimeout ? 504 : 500 }
     );
   } catch (err: any) {
     return NextResponse.json(

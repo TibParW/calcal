@@ -26,18 +26,13 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Multi-model candidate list for live probe:
-  // Prioritizes ultra-fast lite models (<1s response) with gemini-3.7-flash as powerhouse #2
+  // Optimized fast probe candidate list:
   const probeModels = [
-    "gemini-3.5-flash-lite",
     "gemini-3.8-flash",
-    "gemini-3.7-flash",
-    "gemini-3.5-flash",
-    "gemini-flash-lite-latest",
-    "gemini-3.1-flash-lite",
-    "gemini-1.5-flash",
+    "gemini-3.5-flash-lite",
+    "gemini-2.5-flash",
     "gemini-2.0-flash",
-    "gemini-flash-latest",
+    "gemini-1.5-flash",
   ];
 
   let lastStatus = 0;
@@ -45,8 +40,14 @@ export async function POST(request: NextRequest) {
   let lastLatency = 0;
 
   for (const modelName of probeModels) {
+    // Global deadline guard: Always finish before Vercel 10s limit
+    if (Date.now() - start > 7000) {
+      console.warn(`[check-quota] Total probe time exceeded 7s guard. Stopping cascade.`);
+      break;
+    }
+
     const controller = new AbortController();
-    const timeoutId = setTimeout(() => controller.abort(), 4000);
+    const timeoutId = setTimeout(() => controller.abort(), 2200);
 
     try {
       const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${encodeURIComponent(apiKey)}`;
@@ -157,13 +158,17 @@ export async function POST(request: NextRequest) {
     }
   }
 
-  // If all models failed
+  // If all models failed or deadline reached
   const latencyMs = Date.now() - start;
+  const isTimeout = latencyMs >= 6800 || lastRawMsg.includes("aborted");
   return NextResponse.json({
     ok: false,
-    status: lastStatus || 500,
+    status: lastStatus || (isTimeout ? 504 : 500),
     latencyMs,
-    message: lastRawMsg || "ไม่สามารถเชื่อมต่อโมเดลใดๆ ของ Google AI ได้",
+    isHighDemand: isTimeout,
+    message: isTimeout
+      ? "เซิร์ฟเวอร์ Google AI มีความหน่วงสูงชั่วคราว (กรุณากดทดสอบซ้ำ)"
+      : (lastRawMsg || "ไม่สามารถเชื่อมต่อโมเดลใดๆ ของ Google AI ได้"),
     rawGoogleError: lastRawMsg,
     testedAt: new Date().toLocaleTimeString("th-TH"),
   });
