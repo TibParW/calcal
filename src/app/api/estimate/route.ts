@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAvailableGeminiModels } from "@/lib/gemini";
 
 export const maxDuration = 10;
 export const dynamic = "force-dynamic";
@@ -81,13 +82,16 @@ export async function POST(request: NextRequest) {
     const startTime = Date.now();
 
     // Multi-Model Cascade for Text Estimation:
-    const fastModels = [
-      "gemini-3.8-flash",
-      "gemini-3.5-flash-lite",
-      "gemini-2.5-flash",
-      "gemini-2.0-flash",
-      "gemini-1.5-flash",
-    ];
+    let fastModels = await getAvailableGeminiModels(apiKey).catch(() => []);
+    if (!fastModels || fastModels.length === 0) {
+      fastModels = [
+        "gemini-3.8-flash",
+        "gemini-3.5-flash-lite",
+        "gemini-2.5-flash",
+        "gemini-2.0-flash",
+        "gemini-1.5-flash",
+      ];
+    }
 
     let lastError: any = null;
 

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { getAvailableGeminiModels } from "@/lib/gemini";
 
 export const maxDuration = 10;
 export const dynamic = "force-dynamic";
@@ -26,14 +27,32 @@ export async function POST(request: NextRequest) {
     );
   }
 
-  // Optimized fast probe candidate list:
-  const probeModels = [
-    "gemini-3.8-flash",
-    "gemini-3.5-flash-lite",
-    "gemini-2.5-flash",
-    "gemini-2.0-flash",
-    "gemini-1.5-flash",
-  ];
+  // Discover live active models for this API key via ModelService.ListModels
+  let probeModels: string[] = [];
+  try {
+    probeModels = await getAvailableGeminiModels(apiKey);
+  } catch (err: any) {
+    if (err?.message?.includes("API_KEY_INVALID") || err?.message?.includes("not valid")) {
+      return NextResponse.json({
+        ok: false,
+        status: 400,
+        latencyMs: Date.now() - start,
+        isKeyInvalid: true,
+        message: "API Key ไม่ถูกต้องหรือถูกเพิกถอน กรุณาตรวจสอบ Key ใน Google AI Studio",
+        testedAt: new Date().toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok" }),
+      });
+    }
+  }
+
+  if (!probeModels || probeModels.length === 0) {
+    probeModels = [
+      "gemini-3.8-flash",
+      "gemini-3.5-flash-lite",
+      "gemini-2.5-flash",
+      "gemini-2.0-flash",
+      "gemini-1.5-flash",
+    ];
+  }
 
   let lastStatus = 0;
   let lastRawMsg = "";
@@ -73,7 +92,7 @@ export async function POST(request: NextRequest) {
           model: modelName,
           latencyMs,
           message: `เชื่อมต่อกับ Google AI สำเร็จ (โมเดล ${modelName})`,
-          testedAt: new Date().toLocaleTimeString("th-TH"),
+          testedAt: new Date().toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok" }),
         });
       }
 
@@ -115,7 +134,7 @@ export async function POST(request: NextRequest) {
           isKeyInvalid: true,
           message: "API Key ไม่ถูกต้องหรือถูกเพิกถอน กรุณาตรวจสอบ Key ใน Google AI Studio",
           rawGoogleError: rawMsg,
-          testedAt: new Date().toLocaleTimeString("th-TH"),
+          testedAt: new Date().toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok" }),
         });
       }
 
@@ -149,7 +168,7 @@ export async function POST(request: NextRequest) {
         isKeyInvalid: false,
         message: friendlyMsg,
         rawGoogleError: rawMsg,
-        testedAt: new Date().toLocaleTimeString("th-TH"),
+        testedAt: new Date().toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok" }),
       });
     } catch (modelErr: any) {
       clearTimeout(timeoutId);
@@ -170,6 +189,6 @@ export async function POST(request: NextRequest) {
       ? "เซิร์ฟเวอร์ Google AI มีความหน่วงสูงชั่วคราว (กรุณากดทดสอบซ้ำ)"
       : (lastRawMsg || "ไม่สามารถเชื่อมต่อโมเดลใดๆ ของ Google AI ได้"),
     rawGoogleError: lastRawMsg,
-    testedAt: new Date().toLocaleTimeString("th-TH"),
+    testedAt: new Date().toLocaleTimeString("th-TH", { timeZone: "Asia/Bangkok" }),
   });
 }

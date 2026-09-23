@@ -95,7 +95,7 @@ const STATIC_CANDIDATE_MODELS = [
   "gemini-1.5-flash",
 ].filter(Boolean) as string[];
 
-async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
+export async function getAvailableGeminiModels(apiKey: string): Promise<string[]> {
   const cached = modelsCache.get(apiKey);
   const now = Date.now();
   if (cached && cached.expires > now) {
@@ -198,8 +198,8 @@ export async function analyzeFoodImage(
     ? base64Data.split(",")[1]
     : base64Data).trim().replace(/\s+/g, "");
 
-  // Use candidate models directly to avoid 1.5s extra roundtrip for model list discovery
-  const candidateModels = STATIC_CANDIDATE_MODELS;
+  // Dynamically resolve live active models supported by this API key (cached for 10 min)
+  const candidateModels = await getAvailableGeminiModels(apiKey);
   const genAI = new GoogleGenerativeAI(apiKey);
 
   const systemInstruction =
